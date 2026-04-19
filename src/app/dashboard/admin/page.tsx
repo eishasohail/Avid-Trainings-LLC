@@ -14,13 +14,12 @@ import {
   CheckCircle2,
   Activity,
   Lock,
-  MoreVertical,
+  TrendingUp,
+  Fingerprint,
   Mail,
   Calendar,
-  Settings,
   ShieldCheck,
-  TrendingUp,
-  Fingerprint
+  MoreVertical
 } from "lucide-react";
 import { fetchAllUsers, updateUserRole, type AdminUser } from "@/lib/services/adminService";
 import type { UserRole } from "@/lib/types/auth";
@@ -224,11 +223,8 @@ export default function AdminPage() {
                          <th className="px-8 py-8 font-black w-[15%] min-w-[150px]">Platform Role</th>
                          <th className="px-8 py-8 font-black w-[15%] min-w-[150px]">Joined Date</th>
                          <th className="px-8 py-8 font-black w-[15%] min-w-[120px]">Status</th>
-                         <th className="px-8 py-8 font-black w-[30%] min-w-[300px] text-right pr-8">
-                            <div className="flex items-center justify-end gap-5">
-                               <div className="w-60 text-center">ACTIONS</div>
-                               <div className="w-14 shrink-0" />
-                            </div>
+                         <th className="px-8 py-8 font-black w-[40%] min-w-[350px] text-right pr-8">
+                            ACTIONS
                          </th>
                       </tr>
                    </thead>
@@ -273,48 +269,38 @@ export default function AdminPage() {
                                   <Activity className="w-4 h-4 animate-pulse" /> Active
                                </div>
                             </td>
-                            <td className="px-8 py-8 text-right pr-8 relative whitespace-nowrap">
-                               <div className="flex items-center justify-end gap-5 h-12">
-                                  {updatingId === u.uid ? (
-                                     <div className="flex items-center justify-end gap-5 h-full">
-                                        <div className="flex items-center justify-center gap-3 w-60 h-full bg-[#f7f9fb] rounded-2xl border border-[#bcc9c6]/20 shadow-inner">
-                                           <Loader2 className="w-5 h-5 animate-spin text-[#00685f]" />
-                                           <span className="text-[10px] font-black text-[#6d7a77] uppercase tracking-widest">Processing</span>
-                                        </div>
-                                        <div className="w-14 h-full shrink-0" />
-                                     </div>
-                                  ) : u.role === 'admin' ? (
-                                     <div className="flex items-center justify-end gap-5 h-full">
-                                        <div className="relative group/root w-60 h-full">
-                                           <div className="absolute inset-0 bg-[#00bfa5] blur-lg opacity-0 group-hover/root:opacity-20 transition-opacity duration-500 rounded-2xl" />
-                                           <div className="relative h-full w-full flex items-center justify-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-gradient-to-br from-[#00bfa5] to-[#00897b] rounded-2xl border border-white/10 shadow-2xl shadow-[#00bfa5]/20 transition-transform active:scale-95 cursor-default">
-                                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-100 animate-pulse" />
-                                              <Lock className="w-3.5 h-3.5 opacity-80" /> Protected Access
-                                           </div>
-                                        </div>
-                                        <div className="w-14 h-full shrink-0" />
-                                     </div>
-                                  ) : (
-                                     <div className="flex items-center justify-end gap-5 h-full">
-                                        <button 
-                                          onClick={() => handleUpdate(u.uid, u.displayName, u.role === 'creator' ? 'learner' : 'creator')}
-                                          className={`relative group/btn w-60 h-full rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 overflow-hidden shadow-sm flex items-center justify-center ${
-                                            u.role === 'creator' 
-                                              ? 'text-red-600 border border-red-200 hover:text-white' 
-                                              : 'text-[#00685f] border border-[#00685f]/20 hover:text-white'
-                                          }`}
-                                        >
-                                           <div className={`absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 ${u.role === 'creator' ? 'bg-gradient-to-br from-red-500 to-red-600' : 'bg-gradient-to-br from-[#00685f] to-[#008378]'}`} />
-                                           <span className="relative z-10">{u.role === 'creator' ? 'Revoke Access' : 'Promote to Creator'}</span>
-                                        </button>
-                                        <button className="relative w-14 h-full flex items-center justify-center bg-white border border-[#bcc9c6]/40 rounded-2xl text-[#6d7a77] hover:text-[#191c1e] hover:border-[#00685f] hover:shadow-xl transition-all duration-300 group-hover/row:translate-x-0 translate-x-1 opacity-100 group-hover/row:opacity-100 active:scale-90 shrink-0">
-                                           <div className="absolute inset-0 bg-[#f7f9fb] opacity-0 hover:opacity-100 rounded-2xl transition-opacity" />
-                                           <MoreVertical className="relative z-10 w-5 h-5" />
-                                        </button>
-                                     </div>
-                                  )}
-                               </div>
-                            </td>
+                            <td className="px-8 py-8 text-right pr-8 whitespace-nowrap">
+                                <div className="flex items-center justify-end gap-3 h-11">
+                                   {updatingId === u.uid ? (
+                                      <div className="flex items-center justify-center gap-3 px-6 h-full bg-[#f7f9fb] rounded-xl border border-[#bcc9c6]/20 shadow-inner">
+                                         <Loader2 className="w-4 h-4 animate-spin text-[#00685f]" />
+                                         <span className="text-[9px] font-black text-[#6d7a77] uppercase tracking-widest">Updating</span>
+                                      </div>
+                                   ) : u.role === 'admin' ? (
+                                      <div className="relative h-full px-6 flex items-center justify-center gap-2.5 text-[9px] font-black uppercase tracking-widest text-white bg-gradient-to-br from-[#131b2e] to-[#2d3b55] rounded-xl border border-white/10 shadow-lg cursor-default">
+                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                         <ShieldCheck className="w-3.5 h-3.5 opacity-80" /> Protected Access
+                                      </div>
+                                   ) : (
+                                      <div className="flex items-center justify-end gap-3 h-full">
+                                         <button 
+                                           onClick={() => handleUpdate(u.uid, u.displayName, u.role === 'creator' ? 'learner' : 'creator')}
+                                           className={`h-full px-5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 border flex items-center justify-center gap-2 ${
+                                             u.role === 'creator' 
+                                               ? 'text-red-500 border-red-200 hover:bg-red-50' 
+                                               : 'text-[#6d7a77] border-[#bcc9c6]/40 hover:border-[#00685f] hover:text-[#00685f] hover:bg-[#00685f]/5'
+                                           }`}
+                                         >
+                                            {u.role === 'creator' ? 'Revoke' : 'Promote'}
+                                         </button>
+                                         <button className="relative w-14 h-full flex items-center justify-center bg-white border border-[#bcc9c6]/40 rounded-2xl text-[#6d7a77] hover:text-[#191c1e] hover:border-[#00685f] hover:shadow-xl transition-all duration-300 group-hover/row:translate-x-0 translate-x-1 opacity-100 group-hover/row:opacity-100 active:scale-95 shrink-0">
+                                            <div className="absolute inset-0 bg-[#f7f9fb] opacity-0 hover:opacity-100 rounded-2xl transition-opacity" />
+                                            <MoreVertical className="relative z-10 w-5 h-5" />
+                                         </button>
+                                      </div>
+                                   )}
+                                </div>
+                             </td>
                          </tr>
                       ))}
                    </tbody>

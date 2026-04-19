@@ -14,10 +14,9 @@ export interface AdminUser {
 export const fetchAllUsers = async (): Promise<AdminUser[]> => {
   try {
     const usersRef = collection(db, "users");
-    const q = query(usersRef, orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(usersRef);
     
-    return querySnapshot.docs.map(doc => {
+    const fetchedUsers = querySnapshot.docs.map(doc => {
       const data = doc.data();
       const roleStr = typeof data.role === "string" ? data.role.trim().toLowerCase() : "";
       return {
@@ -25,10 +24,15 @@ export const fetchAllUsers = async (): Promise<AdminUser[]> => {
         email: data.email || "",
         displayName: data.displayName || "Unknown User",
         role: (roleStr || "learner") as UserRole,
-        createdAt: data.createdAt || new Date().toISOString(),
-        status: "active", // Defaulting to active for now
+        createdAt: data.createdAt || new Date(0).toISOString(), // Fallback so sorting works
+        status: "active" as const, 
       };
     });
+
+    // Sort client-side so Firebase doesn't hide documents missing a createdAt field!
+    fetchedUsers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    return fetchedUsers;
   } catch (error) {
     console.error("Error fetching users:", error);
     return [];

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginWithEmail, loginWithGoogle, getRedirectPath } from "@/lib/services/authService";
 import type { LoginCredentials } from "@/lib/types/auth";
@@ -17,8 +17,11 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export default function LoginForm() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
+  
   const [formData, setFormData] = useState<LoginCredentials>({
     email: "",
     password: "",
@@ -52,7 +55,11 @@ export default function LoginForm() {
     if (result.success && result.user) {
       setIsSuccess(true);
       setTimeout(() => {
-        router.push(getRedirectPath(result.user!.role));
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else {
+          router.push(getRedirectPath(result.user!.role));
+        }
       }, 1500);
     } else {
       setError(result.error?.message ?? "Login failed.");
@@ -67,7 +74,11 @@ export default function LoginForm() {
     if (result.success && result.user) {
       setIsSuccess(true);
       setTimeout(() => {
-        router.push(getRedirectPath(result.user!.role));
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else {
+          router.push(getRedirectPath(result.user!.role));
+        }
       }, 1500);
     } else {
       setError(result.error?.message ?? "Google login failed.");
@@ -249,5 +260,15 @@ export default function LoginForm() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginForm() {
+  return (
+    <Suspense fallback={
+        <div className="w-full max-w-md p-10 bg-white/50 animate-pulse rounded-2xl border border-white/20 h-[500px]" />
+    }>
+      <LoginFormContent />
+    </Suspense>
   );
 }

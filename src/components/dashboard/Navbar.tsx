@@ -86,10 +86,6 @@ export default function Navbar({
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#00685f]/5 to-transparent rounded-full border border-[#00685f]/10 animate-pulse">
-           <Sparkles className="w-3.5 h-3.5 text-[#00685f]" />
-           <span className="text-[10px] font-black uppercase tracking-widest text-[#00685f]">System Active</span>
-        </div>
 
         {/* Notifications */}
         <div className="relative" ref={dropdownRef}>

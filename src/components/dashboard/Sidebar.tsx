@@ -8,7 +8,6 @@ import {
   BarChart2,
   ShieldCheck,
   User,
-  Award,
   LogOut,
   X,
 } from "lucide-react";
@@ -35,7 +34,7 @@ export default function Sidebar({
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", roles: ["learner", "creator", "admin"] },
     { label: "My Courses", icon: BookOpen, href: "/dashboard/courses", roles: ["learner", "creator", "admin"] },
-    { label: "Certificates", icon: Award, href: "/dashboard/certificates", roles: ["learner", "admin"] },
+    { label: "Course Library", icon: Library, href: "/dashboard/library", roles: ["learner", "creator", "admin"] },
     { label: "Editor", icon: PenSquare, href: "/dashboard/editor", roles: ["creator", "admin"] },
     { label: "Publications", icon: Library, href: "/dashboard/publications", roles: ["creator", "admin"] },
     { label: "Analytics", icon: BarChart2, href: "/dashboard/analytics", roles: ["creator", "admin"] },
@@ -52,7 +51,7 @@ export default function Sidebar({
       />
 
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-white border-r border-[#bcc9c6]/40 z-50 flex flex-col transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) shadow-[4px_0_24px_rgba(0,0,0,0.02)] md:translate-x-0 ${
+        className={`fixed left-0 top-0 h-screen w-64 bg-white border-r border-[#bcc9c6]/40 z-50 flex flex-col transition-transform duration-500 shadow-[4px_0_24px_rgba(0,0,0,0.02)] md:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -60,14 +59,14 @@ export default function Sidebar({
           <div className="mb-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-[#00685f] flex items-center justify-center rounded-lg shadow-sm shrink-0">
-                <span className="text-white font-black text-base shadow-inner">A</span>
+                <span className="text-white font-black text-base">A</span>
               </div>
               <div>
                 <h1 className="font-extrabold text-[#191c1e] tracking-tight text-lg leading-none">
                   Avid Trainings
                 </h1>
                 <p className="text-[9px] uppercase tracking-[0.2em] text-[#6d7a77] font-bold mt-1">
-                  LMS Portal
+                  Precision Learning
                 </p>
               </div>
             </div>
@@ -80,7 +79,6 @@ export default function Sidebar({
           </div>
 
           <nav className="flex-1 space-y-1.5 overflow-y-auto pr-2 custom-scrollbar">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#6d7a77] mb-3 px-3">Main Menu</div>
             {visibleItems.map((item) => {
               const isActive = pathname === item.href;
               return (

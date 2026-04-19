@@ -198,7 +198,9 @@ export const registerWithEmail = async (
       displayName: fullName,
       email:       credentials.email,
       role:        "learner", // everyone starts as learner
+      photoURL:    "",
       createdAt:   new Date().toISOString(),
+      provider:    "email",
     });
 
     const user = await buildAuthUser(credential.user);
@@ -234,32 +236,63 @@ export const loginWithEmail = async (
 // ─── Login with Google ─────────────────────────────────────────
 export const loginWithGoogle = async (): Promise<AuthResult> => {
   try {
-    const provider = new GoogleAuthProvider();
-    const credential = await signInWithPopup(auth, provider);
+    const provider = new GoogleAuthProvider()
+    const credential = await signInWithPopup(auth, provider)
+    const user = credential.user
 
     // Check if user already exists in Firestore
-    const userDoc = await getDoc(doc(db, "users", credential.user.uid));
+    const userDocRef = doc(db, "users", user.uid)
+    const userDoc = await getDoc(userDocRef)
 
-    // If new Google user → create Firestore record with learner role
+    const nameParts = user.displayName?.split(" ") || ["", ""]
+    
     if (!userDoc.exists()) {
-      const nameParts = credential.user.displayName?.split(" ") ?? ["", ""];
-      await setDoc(doc(db, "users", credential.user.uid), {
-        firstName:   nameParts[0] ?? "",
-        lastName:    nameParts.slice(1).join(" ") ?? "",
-        displayName: credential.user.displayName ?? "",
-        email:       credential.user.email ?? "",
-        role:        "learner",
-        createdAt:   new Date().toISOString(),
-      });
+      // New Google user → save complete profile
+      await setDoc(userDocRef, {
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        displayName: user.displayName || "",
+        email: user.email || "",
+        role: "learner",
+        photoURL: user.photoURL || "",
+        createdAt: new Date().toISOString(),
+        provider: "google",
+      })
+    } else {
+      // User exists, but might be missing fields from older versions
+      // We merge fields to ensure they appear correctly
+      const existingData = userDoc.data()
+      const updates: Record<string, any> = {}
+      
+      if (!existingData.createdAt) updates.createdAt = new Date().toISOString()
+      if (!existingData.provider) updates.provider = "google"
+      if (!existingData.firstName) updates.firstName = nameParts[0] || ""
+      if (!existingData.email) updates.email = user.email || ""
+      if (!existingData.role) updates.role = "learner"
+      
+      if (Object.keys(updates).length > 0) {
+        await setDoc(userDocRef, updates, { merge: true })
+      }
     }
 
-    const user = await buildAuthUser(credential.user);
-    return { success: true, user };
+    // Get role from Firestore
+    const role = await getUserRole(user.uid)
+    
+    return {
+      success: true,
+      user: {
+        uid: user.uid,
+        email: user.email || "",
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        role,
+      }
+    }
   } catch (err: unknown) {
-    const code = (err as { code?: string }).code ?? "auth/unknown";
-    return { success: false, error: mapFirebaseError(code) };
+    const code = (err as { code?: string }).code ?? "auth/unknown"
+    return { success: false, error: mapFirebaseError(code) }
   }
-};
+}
 
 // ─── Logout ───────────────────────────────────────────────────
 export const logout = async (): Promise<void> => {

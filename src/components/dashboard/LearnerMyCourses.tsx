@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Filter, BookOpen, Clock, ChevronRight, GraduationCap, Award } from "lucide-react";
+import { Search, Filter, BookOpen, Clock, ChevronRight, GraduationCap, Award, Library } from "lucide-react";
 import type { AuthUser } from "@/lib/types/auth";
 import { useState } from "react";
 
@@ -22,9 +22,18 @@ export default function LearnerMyCourses({ user }: { user: AuthUser }) {
 
   return (
     <div className="space-y-10">
-      <header className="animate-fade-in-up">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#191c1e] tracking-tighter">My Courses</h1>
-        <p className="text-sm sm:text-base font-medium text-[#6d7a77] mt-2">Manage your ISO certification journey and ongoing learning.</p>
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 animate-fade-in-up">
+        <div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#191c1e] tracking-tighter">My Courses</h1>
+          <p className="text-sm sm:text-base font-medium text-[#6d7a77] mt-2">Manage your ISO certification journey and ongoing learning.</p>
+        </div>
+        <button 
+          onClick={() => window.location.href = '/dashboard/library'} 
+          className="flex items-center justify-center gap-2 px-6 py-4 bg-white border-2 border-[#bcc9c6]/40 hover:border-[#00685f] hover:text-[#00685f] text-[#3d4947] rounded-xl font-bold text-sm transition-all shadow-sm group active:scale-95 whitespace-nowrap"
+        >
+          Discover More Courses
+          <Library className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+        </button>
       </header>
 
       {/* Tabs and Filter */}

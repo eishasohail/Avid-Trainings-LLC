@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   motion, 
   useScroll, 
@@ -38,51 +39,79 @@ import {
   Command,
   TrendingUp,
   ExternalLink,
-  Flame
+  Flame,
+  LayoutGrid,
+  Bookmark,
+  User as UserIcon,
+  MessageCircle,
+  Building2,
+  Globe2,
+  GraduationCap as GraduationIcon,
+  ShieldCheck as ShieldIcon,
+  BookOpen as BookIcon,
+  Trophy,
+  Briefcase,
+  ChevronLeft
 } from "lucide-react";
 
-// --- Components ---
+import { GravityStarsBackground } from '@/components/animate-ui/components/backgrounds/gravity-stars';
+import { HexagonBackground } from '@/components/animate-ui/components/backgrounds/hexagon';
+import { RadialIntro } from '@/components/animate-ui/components/community/radial-intro';
+import { RadialNav } from '@/components/animate-ui/components/community/radial-nav';
+import { DUMMY_COURSES, getPublishedCourses } from '@/lib/data/dummyData';
 
-const FlowyGradients = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50">
-    <motion.div 
-      animate={{ 
-        x: [0, 100, 0], 
-        y: [0, 50, 0],
-        scale: [1, 1.2, 1]
-      }}
-      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-      className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-br from-[#00685f]/10 to-transparent blur-[120px] rounded-full" 
-    />
-    <motion.div 
-      animate={{ 
-        x: [0, -80, 0], 
-        y: [0, 100, 0],
-        scale: [1, 1.1, 1]
-      }}
-      transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-      className="absolute top-[20%] -right-[5%] w-[35%] h-[35%] bg-gradient-to-br from-[#00bfa5]/5 to-transparent blur-[100px] rounded-full" 
-    />
-    <motion.div 
-      animate={{ 
-        x: [0, 50, 0], 
-        y: [0, -50, 0],
-        scale: [1, 1.3, 1]
-      }}
-      transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-      className="absolute bottom-[10%] left-[20%] w-[30%] h-[30%] bg-gradient-to-tr from-blue-400/5 to-transparent blur-[110px] rounded-full" 
-    />
-  </div>
-);
+const COMMUNITY_ITEMS = [
+  { id: 1, name: 'Framer University', src: 'https://pbs.twimg.com/profile_images/1602734731728142336/9Bppcs67_400x400.jpg' },
+  { id: 2, name: 'arhamkhnz', src: 'https://pbs.twimg.com/profile_images/1897311929028255744/otxpL-ke_400x400.jpg' },
+  { id: 3, name: 'Skyleen', src: 'https://pbs.twimg.com/profile_images/1948770261848756224/oPwqXMD6_400x400.jpg' },
+  { id: 4, name: 'Shadcn', src: 'https://pbs.twimg.com/profile_images/1593304942210478080/TUYae5z7_400x400.jpg' },
+  { id: 5, name: 'Adam Wathan', src: 'https://pbs.twimg.com/profile_images/1677042510839857154/Kq4tpySA_400x400.jpg' },
+  { id: 6, name: 'Guillermo Rauch', src: 'https://pbs.twimg.com/profile_images/1783856060249595904/8TfcCN0r_400x400.jpg' },
+  { id: 7, name: 'Jhey', src: 'https://pbs.twimg.com/profile_images/1534700564810018816/anAuSfkp_400x400.jpg' },
+  { id: 8, name: 'David Haz', src: 'https://pbs.twimg.com/profile_images/1927474594102784000/Al0g-I6o_400x400.jpg' },
+  { id: 9, name: 'Matt Perry', src: 'https://pbs.twimg.com/profile_images/1690345911149375488/wfD0Ai9j_400x400.jpg' },
+];
 
-const GridOverlay = () => (
-  <div className="absolute inset-0 pointer-events-none opacity-[0.3]">
-    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-multiply" />
-    <div className="absolute inset-0" 
-      style={{ backgroundImage: `radial-gradient(circle at 1px 1px, #bcc9c6 1.2px, transparent 0)`, backgroundSize: '40px 40px' }} />
-    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f7f9fb]/80 to-[#f7f9fb]" />
-  </div>
-);
+const NAV_ITEMS = [
+  { id: 1, icon: LayoutGrid, label: 'Projects', angle: 0 },
+  { id: 2, icon: Bookmark, label: 'Bookmarks', angle: -115 },
+  { id: 3, icon: User, label: 'About', angle: 115 },
+];
+
+const StatCounter = ({ value, label, suffix = "" }: { value: number, label: string, suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (isInView) {
+      let start = 0;
+      const end = value;
+      const duration = 2000;
+      const increment = end / (duration / 16);
+      
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= end) {
+          setCount(end);
+          clearInterval(timer);
+        } else {
+          setCount(Math.floor(start));
+        }
+      }, 16);
+      return () => clearInterval(timer);
+    }
+  }, [isInView, value]);
+
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-4xl md:text-5xl font-black text-[#131b2e] mb-2">
+        {count}{suffix}
+      </div>
+      <div className="text-[11px] font-black uppercase tracking-[0.2em] text-[#00685f]/60">{label}</div>
+    </div>
+  );
+};
 
 const SectionNotice = ({ text }: { text: string }) => (
   <motion.div
@@ -96,15 +125,16 @@ const SectionNotice = ({ text }: { text: string }) => (
   </motion.div>
 );
 
-// --- Main Page ---
-
 export default function LandingPage() {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [activeHash, setActiveHash] = useState("#home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const sections = ["home", "features", "curriculum", "methodology", "enterprise"];
   const { scrollYProgress } = useScroll();
+
+  const featuredCourses = useMemo(() => getPublishedCourses().slice(0, 3), []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -138,317 +168,234 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f9fb] font-sans selection:bg-[#00685f]/30 overflow-x-hidden antialiased">
+    <div className="min-h-screen bg-[#fafcfc] font-sans selection:bg-[#00685f]/15 overflow-x-hidden antialiased text-[#11221f]">
       {/* Refined Navigation */}
-      <nav className={`fixed top-0 inset-x-0 z-[1000] px-6 transition-all duration-700 ${scrolled ? 'py-4' : 'py-10'}`}>
-        <div className={`max-w-6xl mx-auto flex items-center justify-between px-8 py-3.5 transition-all duration-700 border-2 rounded-[32px] ${
-          scrolled 
-            ? "bg-white/95 backdrop-blur-3xl border-[#00685f]/5 shadow-[0_30px_60px_-15px_rgba(0,104,95,0.12)]" 
-            : "bg-white/60 backdrop-blur-xl border-white/80 shadow-2xl"
-        }`}>
-          <div className="flex items-center gap-12">
+      <nav className={`fixed top-0 inset-x-0 z-[1000] transition-all duration-500 ${
+        scrolled 
+          ? "bg-white/80 backdrop-blur-xl border-b border-[#00685f]/5 py-4 shadow-sm" 
+          : "bg-transparent py-7"
+      }`}>
+        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
+          <div className="flex items-center gap-14">
             <button onClick={() => scrollToSection('home')} className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-[#131b2e] rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-navy/20 transition-transform group-hover:rotate-[15deg]">
+              <div className="w-10 h-10 bg-[#131b2e] rounded-xl flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:rotate-6 shadow-lg">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <span className="text-xl font-black text-[#131b2e] tracking-tighter">Avid <span className="text-[#00685f]">Trainings</span></span>
             </button>
-            <div className="hidden lg:flex items-center gap-8">
+            <div className="hidden lg:flex items-center gap-10">
               {[
+                { name: "Courses", id: "curriculum" },
                 { name: "Features", id: "features" },
-                { name: "Curriculum", id: "curriculum" },
-                { name: "Methodology", id: "methodology" },
-                { name: "Enterprise", id: "enterprise" }
+                { name: "About", id: "methodology" },
+                { name: "Community", id: "enterprise" }
               ].map(item => (
                 <button 
                   key={item.id} 
                   onClick={() => scrollToSection(item.id)}
-                  className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all relative py-2 ${
+                  className={`text-[11px] font-black uppercase tracking-[0.25em] transition-all relative py-2 ${
                     activeHash === `#${item.id}` ? 'text-[#00685f]' : 'text-[#6d7a77] hover:text-[#131b2e]'
                   }`}
                 >
                   {item.name}
-                  {activeHash === `#${item.id}` && (
-                    <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00685f] to-[#00bfa5] rounded-full" />
-                  )}
+                  <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-[#00685f] rounded-full transition-transform duration-300 origin-left ${
+                    activeHash === `#${item.id}` ? 'scale-x-100' : 'scale-x-0'
+                  }`} />
                 </button>
               ))}
             </div>
           </div>
           <div className="flex items-center gap-8">
-            <Link href="/login" className="hidden sm:block text-[11px] font-black uppercase tracking-widest text-[#6d7a77] hover:text-[#00685f] transition-colors">Login</Link>
-            <Link href="/register" className="px-8 py-3.5 bg-[#00685f] text-white rounded-[18px] text-[11px] font-black uppercase tracking-widest shadow-[0_15px_30px_-5px_rgba(0,104,95,0.4)] hover:bg-[#004d46] hover:scale-[1.03] active:scale-95 transition-all">
-              Get Started Free
+            <Link href="/login" className="hidden sm:block text-[11px] font-black uppercase tracking-widest text-[#6d7a77] hover:text-[#00685f] transition-all">Login</Link>
+            <Link href="/register" className="px-8 py-3 bg-[#131b2e] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-[#00685f] hover:translate-y-[-2px] active:translate-y-0 transition-all">
+              Get Started
             </Link>
-            <button className="lg:hidden text-[#131b2e]" onClick={() => setMobileMenuOpen(true)}>
-               <Menu className="w-7 h-7" />
+            <button className="lg:hidden text-[#11221f]" onClick={() => setMobileMenuOpen(true)}>
+               <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
       </nav>
 
       <main>
-        {/* HERO: Enterprise Elite with Color Flow */}
-        <section id="home" className="relative pt-64 pb-32 px-6 min-h-screen flex flex-col items-center justify-center">
-          <FlowyGradients />
-          <GridOverlay />
+        <section id="home" className="relative pt-64 pb-32 px-6 min-h-screen flex flex-col items-center justify-center bg-[#fafcfc] overflow-hidden">
+          <GravityStarsBackground className="opacity-20" />
           
-          <div className="max-w-6xl mx-auto relative z-10 text-center space-y-12">
-            <SectionNotice text="ISO Certified Excellence 2026" />
+          <div className="absolute inset-0 z-0">
+             <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-[#00685f]/5 blur-[120px] rounded-full animate-pulse" />
+             <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-[#00bfa5]/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+          </div>
+          
+          <div className="max-w-7xl mx-auto relative z-10 text-center space-y-16">
+            <SectionNotice text="ISO Certified Academy 2026" />
 
-            <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="text-5xl sm:text-7xl md:text-[6.5rem] lg:text-[8rem] font-black text-[#131b2e] tracking-tighter leading-[0.9] mb-8"
-            >
-               Elevate Your <br/>
-               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00685f] to-[#00bfa5] relative inline-block">
-                 Professional
-                 <div className="absolute bottom-2 left-0 right-0 h-3 bg-[#00685f]/10 -rotate-1 -z-10 rounded-full" />
-               </span> Standards.
-            </motion.h1>
-            
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.1 }}
-              className="max-w-3xl mx-auto text-lg sm:text-xl font-semibold text-[#6d7a77] leading-relaxed"
-            >
-               The primary infrastructure for mastering ISO/IEC frameworks through rigorous, logic-driven course sequences and institutional behavioral analytics.
-            </motion.p>
+            <div className="space-y-8">
+                <motion.h1 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="text-6xl sm:text-8xl md:text-[9rem] font-black text-[#131b2e] tracking-tighter leading-[0.85]"
+                >
+                Better Skills. <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00685f] via-[#00bfa5] to-teal-400">
+                    Better Standards.
+                </span>
+                </motion.h1>
+                
+                <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.1 }}
+                className="max-w-2xl mx-auto text-xl font-medium text-[#6d7a77] leading-relaxed"
+                >
+                Access premium ISO certification courses designed for <span className="text-[#131b2e] font-black">compliance professionals</span> and industry leaders.
+                </motion.p>
+            </div>
 
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.2 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10"
+              className="flex flex-col sm:flex-row items-center justify-center gap-6"
             >
-               <Link href="/register" className="w-full sm:w-auto px-12 py-5.5 bg-[#131b2e] text-white rounded-[20px] text-[12px] font-black uppercase tracking-[0.3em] shadow-3xl hover:bg-[#00685f] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4">
-                  Start Learning <ArrowRight className="w-5 h-5" />
+               <Link href="/register" className="w-full sm:w-auto px-14 py-6 bg-[#131b2e] text-white rounded-[24px] text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-[#00685f] hover:translate-y-[-4px] active:translate-y-0 transition-all flex items-center justify-center gap-4">
+                  Enroll Now <ArrowRight className="w-5 h-5" />
                </Link>
-               <button className="w-full sm:w-auto px-10 py-5.5 bg-white border-2 border-[#bcc9c6]/50 text-[#131b2e] rounded-[20px] text-[11px] font-black uppercase tracking-[0.3em] shadow-sm hover:border-[#131b2e] hover:shadow-2xl transition-all flex items-center justify-center gap-5 group">
-                  <div className="w-8 h-8 rounded-xl bg-[#f0f4f4] flex items-center justify-center group-hover:bg-[#131b2e] group-hover:text-white transition-all">
+               <button className="w-full sm:w-auto px-12 py-6 bg-white border border-[#bcc9c6]/30 text-[#131b2e] rounded-[24px] text-[11px] font-black uppercase tracking-[0.3em] shadow-sm hover:border-[#131b2e] hover:shadow-xl transition-all flex items-center justify-center gap-5 group">
+                  <div className="w-8 h-8 rounded-xl bg-[#ebfaf8] flex items-center justify-center group-hover:bg-[#131b2e] group-hover:text-white transition-all">
                      <Play className="w-3.5 h-3.5 ml-0.5" />
                   </div>
-                  Platform Documentation
+                  Watch Demo
                </button>
             </motion.div>
 
-            {/* Floating High-Fidelity UI Presentation */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="pt-24 relative hidden md:block"
-            >
-               <div className="relative max-w-5xl mx-auto">
-                 <div className="absolute -inset-4 bg-gradient-to-r from-[#00685f]/20 via-[#00bfa5]/20 to-blue-400/20 rounded-[64px] blur-[100px] opacity-40 animate-pulse" />
-                 <div className="relative bg-white border-2 border-[#bcc9c6]/30 rounded-[44px] p-3 shadow-3xl overflow-hidden aspect-[16/9] group hover:border-[#00685f]/30 transition-colors duration-1000">
-                    <div className="w-full h-full bg-[#fcfdfe] rounded-[32px] border border-[#bcc9c6]/10 flex flex-col">
-                       {/* Mock Dashboard Top */}
-                       <div className="h-16 border-b border-[#bcc9c6]/10 px-8 flex items-center justify-between bg-white">
-                          <div className="flex gap-2">
-                             {[1,2,3].map(i => <div key={i} className="w-2.5 h-2.5 rounded-full bg-[#bcc9c6]/30" />)}
-                          </div>
-                          <div className="flex items-center gap-6">
-                             <div className="w-40 h-2 bg-[#f0f4f4] rounded-full overflow-hidden">
-                                <div className="w-2/3 h-full bg-gradient-to-r from-[#00685f] to-[#00bfa5]" />
-                             </div>
-                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#131b2e] to-[#00685f]" />
-                          </div>
-                       </div>
-                       {/* Mock Dashboard Content */}
-                       <div className="flex-1 p-10 flex items-center justify-center relative">
-                          {/* Card 1: Course Progress */}
-                          <div className="w-full max-w-sm bg-white border border-[#bcc9c6]/30 rounded-[36px] p-8 shadow-xl hover:scale-105 transition-transform duration-500 relative z-10">
-                             <div className="flex flex-col items-center gap-6">
-                                <div className="relative w-32 h-32 flex items-center justify-center mt-2 group">
-                                   <svg className="w-full h-full transform -rotate-90">
-                                       <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-[#f0f4f4]" />
-                                       <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray="351.8" strokeDashoffset="77.4" className="text-[#00bfa5] transition-all duration-1000 ease-out group-hover:stroke-[#00685f]" strokeLinecap="round" />
-                                   </svg>
-                                   <div className="absolute flex flex-col items-center justify-center">
-                                      <span className="text-3xl font-black text-[#131b2e] leading-none">78%</span>
-                                   </div>
-                                </div>
-                                <div className="text-center space-y-2">
-                                   <p className="text-[11px] font-black text-[#00685f] uppercase tracking-[0.3em]">Course In Progress</p>
-                                   <p className="text-2xl font-black text-[#131b2e] leading-tight">ISO Audit Training</p>
-                                </div>
-                             </div>
-                             <div className="pt-8">
-                                <button className="w-full py-4 bg-[#131b2e] text-white rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-[#00685f] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg">
-                                   Continue Learning <ArrowRight className="w-5 h-5" />
-                                </button>
-                             </div>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
-                 {/* Floating Badges */}
-                 <motion.div 
-                   animate={{ y: [0, -15, 0], x: [0, 5, 0] }}
-                   transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-                   className="absolute -top-4 -left-12 p-6 bg-white border-2 border-[#bcc9c6]/20 rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,104,95,0.15)] flex items-center gap-5 z-20"
-                 >
-                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl flex items-center justify-center text-[#00685f] shadow-inner">
-                       <CheckCircle className="w-7 h-7" />
-                    </div>
-                    <div className="text-left">
-                       <p className="text-[10px] font-black text-[#6d7a77] uppercase tracking-[0.2em]">Certificate Earned</p>
-                       <p className="text-lg font-black text-[#131b2e]">ISO 27001 Badge</p>
-                    </div>
-                 </motion.div>
-                 <motion.div 
-                   animate={{ y: [0, 15, 0], x: [0, -5, 0] }}
-                   transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-                   className="absolute -bottom-4 -right-12 p-6 bg-[#131b2e] border-2 border-white/10 rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] flex items-center gap-5 group z-20"
-                 >
-                    <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-amber-400 shadow-inner group-hover:scale-110 transition-transform">
-                       <Flame className="w-7 h-7" />
-                    </div>
-                    <div className="text-left text-white">
-                       <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Learning Streak</p>
-                       <p className="text-lg font-black tracking-tight flex items-center gap-1.5">12 Days <span className="text-amber-400 text-xl leading-none">🔥</span></p>
-                    </div>
-                 </motion.div>
-               </div>
-            </motion.div>
+            {/* Stats Section */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 pt-24 max-w-4xl mx-auto">
+              <StatCounter value={50} label="Premium Courses" suffix="+" />
+              <StatCounter value={1200} label="Professionals" suffix="+" />
+              <StatCounter value={98} label="Success Rate" suffix="%" />
+              <StatCounter value={24} label="Support" suffix="/7" />
+            </div>
           </div>
         </section>
 
-        {/* FEATURES: Multi-Hue Bento Grid */}
-        <section id="features" className="py-48 px-6 bg-white relative">
-           <div className="max-w-6xl mx-auto space-y-24">
-              <div className="max-w-3xl">
-                <SectionNotice text="The Infrastructure" />
-                <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-[#131b2e] tracking-tighter leading-[0.9]">
-                   Structure Your <br/> Professional <span className="text-[#00685f]">Growth.</span>
-                </h2>
+        {/* FEATURES */}
+        <section id="features" className="py-64 px-8 bg-white relative overflow-hidden">
+           <div className="max-w-7xl mx-auto space-y-32">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-end">
+                  <div className="space-y-10">
+                    <SectionNotice text="The Academy Experience" />
+                    <h2 className="text-5xl md:text-8xl font-black text-[#131b2e] tracking-tighter leading-[0.85]">
+                       Master Your <br/> <span className="text-[#00685f]">Domain.</span>
+                    </h2>
+                  </div>
+                  <p className="text-xl font-medium text-[#6d7a77] leading-relaxed max-w-md pb-4">
+                    Our platform provides the structure and clarity needed to navigate complex ISO frameworks with confidence.
+                  </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-8 auto-rows-[250px]">
-                 <motion.div 
-                   whileHover={{ y: -8, backgroundColor: "#fcfdfe", borderColor: "#00685f33" }}
-                   className="lg:col-span-8 md:row-span-2 bg-[#fcfdfe] border-2 border-[#bcc9c6]/20 rounded-[48px] p-12 flex flex-col justify-between group transition-all duration-700 shadow-sm"
-                 >
-                    <div className="w-16 h-16 bg-[#131b2e] rounded-3xl flex items-center justify-center text-white shadow-3xl group-hover:rotate-12 transition-transform">
-                       <Layers className="w-8 h-8" />
-                    </div>
-                    <div className="space-y-6 max-w-lg">
-                       <h3 className="text-4xl font-black text-[#131b2e] tracking-tight">Course Builder</h3>
-                       <p className="text-lg font-medium text-[#6d7a77] leading-relaxed">Translate institutional complexity into high-fidelity educational flows powered by deep behavioral engineering.</p>
-                       <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-[#00685f] group-hover:gap-6 transition-all group-hover:text-[#00bfa5]">
-                         Explore Engineering Protocols <ArrowRight className="w-4.5 h-4.5" />
-                       </div>
-                    </div>
-                 </motion.div>
-
-                 <motion.div 
-                   whileHover={{ y: -8, scale: 1.02 }}
-                   className="lg:col-span-4 md:row-span-2 bg-gradient-to-br from-[#131b2e] via-[#0b514c] to-[#00685f] rounded-[48px] p-12 flex flex-col justify-between group transition-all duration-700 shadow-3xl text-white relative overflow-hidden"
-                 >
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#00bfa5]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center text-[#00bfa5] shadow-2xl group-hover:scale-110 transition-transform relative z-10">
-                       <Activity className="w-8 h-8" />
-                    </div>
-                    <div className="space-y-6 relative z-10">
-                       <h3 className="text-3xl font-black tracking-tight leading-tight">Progress Tracking</h3>
-                       <p className="text-base font-medium text-white/40 leading-relaxed italic">"Simultaneous skill mapping across 12,000+ active enterprise professional nodes."</p>
-                    </div>
-                 </motion.div>
-
-                 <motion.div 
-                   whileHover={{ y: -5, borderColor: "#00685f44", boxShadow: "0 30px 60px -15px rgba(0,0,0,0.06)" }}
-                   className="lg:col-span-6 bg-white border border-[#bcc9c6]/40 rounded-[44px] p-10 flex flex-col justify-between group transition-all duration-500 shadow-sm"
-                 >
-                    <div className="flex items-center gap-6">
-                       <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#00685f] group-hover:bg-[#00685f] group-hover:text-white transition-all">
-                          <ShieldCheck className="w-7 h-7" />
-                       </div>
-                       <h3 className="text-2xl font-black text-[#131b2e] tracking-tight">Institutional Privacy</h3>
-                    </div>
-                    <p className="text-sm font-medium text-[#6d7a77] leading-relaxed">Multi-layered data isolation protocols designed for high-sensitivity governance frameworks.</p>
-                 </motion.div>
-
-                 <motion.div 
-                   whileHover={{ y: -5, backgroundColor: "#004d46", boxShadow: "0 30px 60px -15px rgba(0,104,95,0.3)" }}
-                   className="lg:col-span-6 bg-[#00685f] rounded-[44px] p-10 flex flex-col justify-between group transition-all duration-500 shadow-3xl text-white overflow-hidden relative"
-                 >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-x-[-20%] -translate-y-[-20%] group-hover:scale-150 transition-transform duration-1000" />
-                    <div className="flex items-center gap-6 relative z-10">
-                       <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-[#00bfa5] border border-white/10">
-                          <Globe className="w-7 h-7" />
-                       </div>
-                       <h3 className="text-2xl font-black tracking-tight">Global Connectivity</h3>
-                    </div>
-                    <p className="text-sm font-medium text-white/70 leading-relaxed max-w-xs relative z-10">Low-latency distribution infrastructure ensuring seamless curriculum delivery worldwide.</p>
-                 </motion.div>
-              </div>
-           </div>
-        </section>
-
-        {/* CURRICULUM: Deep Gradient Cards */}
-        <section id="curriculum" className="py-48 px-6 bg-[#f7f9fb] relative overflow-hidden">
-           <FlowyGradients />
-           <div className="max-w-6xl mx-auto space-y-24 relative z-10">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
-                 <div className="max-w-3xl">
-                   <SectionNotice text="The Academy Library" />
-                   <h2 className="text-4xl md:text-7xl font-black text-[#131b2e] tracking-tighter leading-[0.85]">
-                      Featured <br/> ISO <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00685f] to-[#00bfa5]">Courses.</span>
-                   </h2>
-                 </div>
-                 <p className="max-w-[280px] text-lg font-bold text-[#6d7a77]/80 leading-relaxed italic opacity-80">Our library provides the structural blueprints for global governance mastery.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                  {[
-                   { id: "ISO/IEC 27001", title: "Information Security Management", level: "Admin Access", grad: "from-[#131b2e] to-[#0b514c]" },
-                   { id: "ISO 9001", title: "Quality Operations Architecture", level: "Creator Access", grad: "from-[#00685f] to-[#00bfa5]" },
-                   { id: "ISO 45001", title: "Occupational Health Protocol", level: "Open Access", grad: "from-[#00bfa5] to-emerald-400" },
-                 ].map((course, i) => (
-                   <motion.div 
-                     key={i}
-                     initial={{ opacity: 0, scale: 0.95 }}
-                     whileInView={{ opacity: 1, scale: 1 }}
-                     transition={{ duration: 0.8, delay: i * 0.1 }}
-                     viewport={{ once: true }}
-                     className="group bg-white border border-[#bcc9c6]/40 rounded-[48px] overflow-hidden shadow-sm hover:shadow-[0_50px_100px_-20px_rgba(0,104,95,0.2)] transition-all duration-700 h-[580px] flex flex-col"
-                   >
-                      <div className={`h-[260px] bg-gradient-to-br ${course.grad} p-12 flex flex-col justify-between relative group-hover:scale-105 transition-transform duration-1000`}>
-                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
-                         <div className="flex justify-between items-start relative z-10">
-                            <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.4em]">ISO Standard</span>
-                            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-white group-hover:text-[#00685f] transition-all">
-                               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </div>
-                         </div>
-                         <h4 className="text-3xl sm:text-4xl font-black text-white tracking-[0.15em] leading-none uppercase relative z-10">{course.id}</h4>
-                      </div>
-                      <div className="p-12 flex flex-col justify-between flex-1 relative bg-white">
-                         <div className="space-y-5">
-                            <h3 className="text-2xl font-black text-[#131b2e] group-hover:text-[#00685f] transition-all duration-500">{course.title}</h3>
-                            <p className="text-sm font-medium text-[#6d7a77] leading-relaxed">Master the structural methodology for institutional resiliency and verified encryption standards.</p>
-                         </div>
-                         <div className="flex items-center justify-between pt-8 border-t border-[#f0f4f4]">
-                            <div className="flex flex-col">
-                               <span className="text-[9px] font-black uppercase text-[#6d7a77]/50 tracking-widest mb-1">Authorization</span>
-                               <span className="text-[10px] font-black uppercase text-[#00685f] tracking-widest">{course.level}</span>
-                            </div>
-                            <div className="flex -space-x-3">
-                               {[1,2,3,4].map(i => <div key={i} className="w-10 h-10 rounded-2xl bg-[#f0f4f4] border-2 border-white shadow-inner" />)}
-                            </div>
-                         </div>
-                      </div>
-                   </motion.div>
+                   { title: "Course Builder", desc: "Engaging ISO standards translated into interactive, retention-optimized paths.", icon: Layers, color: "bg-[#ebfaf8]" },
+                   { title: "Progress Analytics", desc: "Live tracking and performance metrics to keep your learning goals on schedule.", icon: Activity, color: "bg-[#f0fdf4]" },
+                   { title: "Data Security", desc: "Enterprise-grade protection for your professional and corporate training data.", icon: ShieldCheck, color: "bg-[#fffaf0]" },
+                   { title: "Global Accessibility", desc: "Seamless course delivery across any device, anywhere in the world.", icon: Globe2, color: "bg-[#f5faff]" },
+                   { title: "Expert Support", desc: "Access to compliance specialists to guide you through complex certification steps.", icon: MessageCircle, color: "bg-[#fef2f2]" },
+                   { title: "Recognition", desc: "Industry-recognized seals and certificates to validate your professional expertise.", icon: Trophy, color: "bg-[#fffbeb]" },
+                 ].map((feat, i) => (
+                    <motion.div 
+                      key={i}
+                      whileHover={{ y: -10 }}
+                      className="p-12 bg-[#fafcfc] border border-[#00685f]/5 rounded-[44px] space-y-8 transition-all hover:bg-white hover:shadow-[0_40px_80px_-20px_rgba(0,104,95,0.08)] group"
+                    >
+                       <div className={`w-16 h-16 ${feat.color} rounded-2xl flex items-center justify-center text-[#131b2e] shadow-sm transition-transform group-hover:scale-110 group-hover:rotate-6`}>
+                          <feat.icon className="w-8 h-8" />
+                       </div>
+                       <div className="space-y-4">
+                          <h3 className="text-2xl font-black text-[#131b2e] tracking-tight">{feat.title}</h3>
+                          <p className="text-base font-medium text-[#6d7a77] leading-relaxed">{feat.desc}</p>
+                       </div>
+                    </motion.div>
                  ))}
               </div>
            </div>
         </section>
 
-        {/* METHODOLOGY: Enhanced Timeline with Colors */}
+        {/* CURRICULUM */}
+        <section id="curriculum" className="py-64 px-8 bg-[#fafcfc] relative">
+           <div className="max-w-7xl mx-auto space-y-32 relative z-10">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-16">
+                 <div className="space-y-10">
+                   <SectionNotice text="Featured Courses" />
+                   <h2 className="text-5xl md:text-8xl font-black text-[#131b2e] tracking-tighter leading-[0.85]">
+                      Premier <br/> ISO <span className="text-[#00685f]">Library.</span>
+                   </h2>
+                 </div>
+                 <p className="max-w-[320px] text-xl font-semibold text-[#6d7a77] leading-relaxed italic opacity-70">
+                    A curated selection of the world's most sought-after ISO certifications.
+                 </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                 {featuredCourses.map((course, i) => {
+                    const grads = [
+                      "from-[#131b2e] to-[#0b514c]",
+                      "from-[#00685f] to-[#00bfa5]",
+                      "from-[#00bfa5] to-emerald-400"
+                    ];
+                    return (
+                      <motion.div 
+                        key={course.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8, delay: i * 0.1 }}
+                        viewport={{ once: true }}
+                        onClick={() => router.push(`/courses/${course.id}`)}
+                        className="group bg-white border border-[#00685f]/5 rounded-[56px] overflow-hidden shadow-sm hover:shadow-[0_60px_120px_-20px_rgba(0,104,95,0.12)] transition-all duration-1000 flex flex-col cursor-pointer"
+                      >
+                         <div className={`h-[300px] bg-gradient-to-br ${grads[i % grads.length]} p-14 flex flex-col justify-between relative group-hover:scale-105 transition-transform duration-1000`}>
+                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
+                            <div className="flex justify-between items-start relative z-10">
+                               <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.4em]">{course.isoStandard}</span>
+                               <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-white group-hover:text-[#00685f] transition-all">
+                                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </div>
+                            <h4 className="text-4xl font-black text-white tracking-[0.1em] leading-none uppercase relative z-10">{course.isoStandard}</h4>
+                         </div>
+                         <div className="p-14 flex flex-col justify-between flex-1 relative bg-white">
+                            <div className="space-y-6">
+                               <h3 className="text-3xl font-black text-[#131b2e] group-hover:text-[#00685f] transition-all duration-500">{course.title}</h3>
+                               <p className="text-base font-medium text-[#6d7a77] line-clamp-2 leading-relaxed">{course.description}</p>
+                               <div className="inline-block px-3 py-1 bg-[#f0f4f4] text-[#00685f] text-[9px] font-black uppercase tracking-widest rounded-lg">
+                                  {course.category}
+                               </div>
+                            </div>
+                            <div className="flex items-center pt-10 border-t border-[#f0f4f4] mt-8">
+                               <div 
+                                className="px-10 py-4 border-2 border-[#131b2e]/5 text-[#131b2e] rounded-2xl text-[11px] font-black uppercase tracking-widest group-hover:border-[#00685f] group-hover:bg-[#00685f] group-hover:text-white transition-all duration-500 shadow-sm flex items-center gap-3"
+                               >
+                                  View Course <ArrowRight className="w-4 h-4" />
+                               </div>
+                            </div>
+                         </div>
+                      </motion.div>
+                    );
+                 })}
+              </div>
+
+              <div className="flex justify-center pt-8">
+                 <button 
+                  onClick={() => router.push('/courses')}
+                  className="text-[#00685f] text-sm font-black uppercase tracking-[0.3em] flex items-center gap-2 hover:gap-4 transition-all"
+                 >
+                    Explore All Courses <ArrowRight className="w-5 h-5" />
+                 </button>
+              </div>
+           </div>
+        </section>
+
+        {/* METHODOLOGY */}
         <section id="methodology" className="py-64 px-10 bg-white relative">
            <div className="max-w-6xl mx-auto space-y-32">
               <div className="text-center space-y-10 max-w-4xl mx-auto">
@@ -468,14 +415,14 @@ export default function LandingPage() {
                  
                  <div className="space-y-56">
                     {[
-                      { title: "Create Account", desc: "Define your institutional role and authenticate professional credentials within our global encrypted ecosystem.", icon: User, color: "bg-blue-500" },
-                      { title: "Enroll in Course", desc: "Select and mobilize targeted ISO academy streams as architectural blueprints for your team.", icon: Layers, color: "bg-[#00685f]" },
-                      { title: "Learn at Your Pace", desc: "Progress through logic-driven behavioral loops monitored by institutional analytics in real-time.", icon: Activity, color: "bg-[#00bfa5]" },
-                      { title: "Earn Certificate", desc: "Earn validated global accreditation and quality seals recognized by infrastructure industry leaders.", icon: Award, color: "bg-amber-400" },
+                      { title: "Create Account", desc: "Join our community of compliance professionals and start your certification journey today.", icon: User, color: "bg-blue-500" },
+                      { title: "Enroll in Course", desc: "Choose from our wide range of ISO certification courses tailored to your professional needs.", icon: Layers, color: "bg-[#00685f]" },
+                      { title: "Learn at Your Pace", desc: "Engage with interactive content and track your learning progress with real-time analytics.", icon: Activity, color: "bg-[#00bfa5]" },
+                      { title: "Earn Certificate", desc: "Receive industry-recognized ISO certifications that validate your expertise and drive career growth.", icon: Award, color: "bg-amber-400" },
                     ].map((step, i) => (
                       <motion.div 
                         key={i}
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 1, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                         viewport={{ once: true, margin: "-100px" }}
@@ -499,100 +446,100 @@ export default function LandingPage() {
            </div>
         </section>
 
-        {/* ENTERPRISE: Enhanced Trust with Glows */}
-        <section id="enterprise" className="py-48 px-10 bg-[#131b2e] relative overflow-hidden flex flex-col items-center">
-           <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `radial-gradient(white 1px, transparent 1px)`, backgroundSize: '40px 40px' }} />
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#00bfa5]/10 rounded-full blur-[200px]" />
-           
-           <div className="max-w-6xl mx-auto text-center space-y-24 relative z-10">
-              <SectionNotice text="What Our Learners Say" />
-              <div className="space-y-16">
-                 <div className="flex justify-center gap-4 text-[#00bfa5]">
-                    {[1,2,3,4,5].map(i => <Star key={i} className="w-10 h-10 fill-current opacity-30 animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />)}
-                 </div>
-                 <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-tight max-w-4xl mx-auto">
-                    "Avid Trainings translated institutional rigor into a fluid, technological experience. Our workforce mobilization time decreased by 60% within forty-eight hours."
+        {/* ENTERPRISE */}
+        <section id="enterprise" className="py-48 px-10 bg-white relative overflow-hidden flex flex-col items-center">
+           <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-24 relative z-10">
+              <div className="flex-1 space-y-12">
+                 <SectionNotice text="Our Community" />
+                 <h2 className="text-4xl md:text-6xl font-black text-[#131b2e] tracking-tighter leading-tight">
+                    Join the Global <br/> <span className="text-[#00685f]">Compliance Network.</span>
                  </h2>
-                 <div className="flex flex-col items-center gap-6">
-                    <div className="w-20 h-20 rounded-full border-2 border-[#00bfa5]/40 p-1">
-                       <div className="w-full h-full bg-[#f0f4f4] rounded-full overflow-hidden grayscale contrast-125" />
+                 <p className="text-lg font-medium text-[#6d7a77] leading-relaxed max-w-lg">
+                    Connect with thousands of industry leaders and compliance experts who have accelerated their careers through our platform.
+                 </p>
+                 <div className="flex items-center gap-6 pt-6">
+                    <div className="flex -space-x-4">
+                       {[1, 2, 3, 4].map(i => (
+                         <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-[#f0f4f4]" />
+                       ))}
                     </div>
-                    <div className="space-y-2">
-                       <p className="text-2xl font-black text-[#00bfa5] tracking-widest uppercase leading-none">Global Infrastructure</p>
-                       <p className="text-[12px] font-black text-white/40 uppercase tracking-[0.4em] pt-1">Director of Governance • 2026 Batch</p>
-                    </div>
+                    <p className="text-[11px] font-black uppercase text-[#00685f] tracking-widest">12,000+ Active Professionals</p>
                  </div>
+              </div>
+              <div className="flex-1 flex justify-center items-center">
+                 <RadialIntro orbitItems={COMMUNITY_ITEMS} />
               </div>
            </div>
         </section>
 
-        {/* FINAL CTA: Elite Flowy Closing */}
-        <section className="py-64 px-10 bg-white relative overflow-hidden text-center">
-           <FlowyGradients />
-           <GridOverlay />
-           <div className="max-w-5xl mx-auto relative z-10 space-y-20">
-              <SectionNotice text="Initialize Your Access" />
-              <h2 className="text-6xl md:text-[7.5rem] font-black text-[#131b2e] tracking-tighter leading-[0.8] mb-8">
-                 Revolutionize <br className="md:hidden" /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00685f] to-[#00bfa5]">Excellence.</span>
-              </h2>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-6">
-                 <Link href="/register" className="w-full sm:w-auto px-16 py-7 bg-[#131b2e] text-white rounded-[24px] text-[15px] font-black uppercase tracking-[0.4em] shadow-[0_30px_60px_-10px_rgba(0,0,0,0.3)] hover:bg-[#00685f] hover:scale-105 active:scale-95 transition-all">
-                    Initialize Access
+        {/* FINAL CTA */}
+        <section className="py-64 px-10 bg-[#fafcfc] relative overflow-hidden text-center flex flex-col items-center">
+           <div className="max-w-6xl mx-auto relative z-10 space-y-24 flex flex-col items-center">
+              <div className="space-y-10">
+                 <SectionNotice text="Start Your Journey" />
+                 <h2 className="text-6xl md:text-[9rem] font-black text-[#131b2e] tracking-tighter leading-[0.8] mb-8">
+                    Ready to <br className="md:hidden" /> <span className="text-[#00685f]">Certify?</span>
+                 </h2>
+                 <p className="text-xl font-medium text-[#6d7a77] max-w-xl mx-auto">
+                    Join thousands of compliance leaders and start your certification journey today with our expert-led platform.
+                 </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-10 pt-6">
+                 <Link href="/register" className="w-full sm:w-auto px-20 py-8 bg-[#131b2e] text-white rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-2xl hover:bg-[#00685f] hover:translate-y-[-4px] active:translate-y-0 transition-all">
+                    Register Free
                  </Link>
-                 <button className="w-full sm:w-auto px-14 py-7 bg-white border-2 border-[#131b2e] text-[#131b2e] rounded-[24px] text-[13px] font-black uppercase tracking-[0.4em] shadow-xl hover:bg-[#131b2e] hover:text-white transition-all">
-                    Institutional Support
+                 <button className="w-full sm:w-auto px-16 py-8 bg-white border border-[#131b2e]/10 text-[#131b2e] rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-sm hover:border-[#131b2e] hover:shadow-xl transition-all">
+                    Contact Sales
                  </button>
               </div>
-              <p className="text-[10px] font-black text-[#bcc9c6] uppercase tracking-[0.5em] pt-12 animate-pulse">Primary Nodes Active • Provisioning 2.4-A</p>
            </div>
         </section>
       </main>
 
-      <footer className="bg-[#fcfdfe] py-40 px-10 border-t border-[#bcc9c6]/30 relative z-10">
-         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start gap-24">
-            <div className="space-y-10 group">
+      <footer className="bg-white py-48 px-8 border-t border-[#00685f]/5 relative z-10">
+         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-32">
+            <div className="space-y-12 group">
                <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 bg-[#131b2e] rounded-2xl flex items-center justify-center text-white shadow-2xl transition-transform group-hover:rotate-[15deg]">
-                   <ShieldCheck className="w-7 h-7" />
+                 <div className="w-14 h-14 bg-[#131b2e] rounded-2xl flex items-center justify-center text-white shadow-xl transition-transform group-hover:rotate-[15deg]">
+                   <ShieldCheck className="w-8 h-8" />
                  </div>
                  <span className="text-3xl font-black text-[#131b2e] tracking-tighter leading-none">Avid <span className="text-[#00685f]">Trainings</span></span>
                </div>
-               <p className="text-lg font-semibold text-[#6d7a77] leading-relaxed max-w-sm">Architecting the future of corporate educational standards through rigor and algorithmic precision.</p>
-               <div className="flex gap-4">
+               <p className="text-xl font-medium text-[#6d7a77] leading-relaxed max-w-sm">The most refined ISO certification experience for compliance professionals.</p>
+               <div className="flex gap-6">
                   {[Globe, Users, ExternalLink].map((Icon, i) => (
-                    <div key={i} className="w-12 h-12 bg-white border-2 border-[#f0f4f4] rounded-2xl flex items-center justify-center text-[#131b2e] hover:bg-[#00685f] hover:text-white transition-all cursor-pointer">
-                       <Icon className="w-5 h-5" />
+                    <div key={i} className="w-14 h-14 bg-[#fafcfc] border border-[#00685f]/5 rounded-2xl flex items-center justify-center text-[#131b2e] hover:bg-[#00685f] hover:text-white transition-all cursor-pointer shadow-sm">
+                       <Icon className="w-6 h-6" />
                     </div>
                   ))}
                </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-20">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-24">
                {[
-                 { title: "Platform", links: ["Engine", "Infrastructure", "ISO Sync", "Security"] },
-                 { title: "Company", links: ["Our Hub", "Institutional News", "Press", "Careers"] },
-                 { title: "Standard", links: ["Privacy", "Ethics", "Governance", "Legal"] },
-                 { title: "Global", links: ["London", "Abu Dhabi", "New York", "Singapore"] },
+                 { title: "Platform", links: ["Courses", "Features", "About", "Community"] },
+                 { title: "Company", links: ["About Us", "Blog", "Press", "Careers"] },
+                 { title: "Standard", links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "Legal"] },
                ].map((group, i) => (
                   <div key={i} className="space-y-10">
-                     <p className="text-[11px] font-black uppercase tracking-[0.35em] text-[#00685f]">{group.title}</p>
+                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-[#00685f]">{group.title}</p>
                      <ul className="space-y-6">
-                        {group.links.map(l => <li key={l}><a href="#" className="text-[13px] font-bold text-[#6d7a77] hover:text-[#00685f] transition-colors">{l}</a></li>)}
+                        {group.links.map(l => <li key={l}><a href="#" className="text-sm font-bold text-[#6d7a77] hover:text-[#00685f] transition-all">{l}</a></li>)}
                      </ul>
                   </div>
                ))}
             </div>
          </div>
-         <div className="max-w-6xl mx-auto pt-32 mt-32 border-t border-[#bcc9c6]/20 flex flex-col md:flex-row justify-between items-center gap-10">
-            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[#bcc9c6]">© 2026 Avid Trainings LLC. All platform protocols synchronized globally.</p>
-            <div className="flex gap-12 text-[11px] font-black uppercase tracking-[0.25em] text-[#bcc9c6]">
-               <a href="#" className="hover:text-[#00685f] transition-colors">Twitter // X</a>
-               <a href="#" className="hover:text-[#00685f] transition-colors">LinkedIn Enterprise</a>
+         <div className="max-w-7xl mx-auto pt-32 mt-32 border-t border-[#00685f]/5 flex flex-col md:flex-row justify-between items-center gap-12">
+            <p className="text-sm font-bold text-[#bcc9c6]">© 2026 Avid Trainings LLC. All rights reserved.</p>
+            <div className="flex gap-16 text-sm font-bold text-[#bcc9c6]">
+               <a href="#" className="hover:text-[#00685f] transition-colors">Twitter</a>
+               <a href="#" className="hover:text-[#00685f] transition-colors">LinkedIn</a>
             </div>
          </div>
       </footer>
 
-      {/* Mobile Context-Aware Menu */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
@@ -612,10 +559,10 @@ export default function LandingPage() {
              </div>
              <div className="flex flex-col gap-10 overflow-y-auto pt-10">
                 {[
+                  { name: "Courses", id: "curriculum" },
                   { name: "Features", id: "features" },
-                  { name: "Curriculum", id: "curriculum" },
-                  { name: "Methodology", id: "methodology" },
-                  { name: "Enterprise", id: "enterprise" }
+                  { name: "About", id: "methodology" },
+                  { name: "Contact", id: "enterprise" }
                 ].map((item, i) => (
                   <motion.button 
                     key={item.id} 
