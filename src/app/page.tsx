@@ -78,6 +78,31 @@ const NAV_ITEMS = [
   { id: 3, icon: User, label: 'About', angle: 115 },
 ];
 
+const StatCounterInner = ({ value, suffix }: { value: number, suffix: string }) => {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true })
+  
+  useEffect(() => {
+    if (isInView) {
+      let start = 0
+      const increment = value / (2000 / 16)
+      const timer = setInterval(() => {
+        start += increment
+        if (start >= value) {
+          setCount(value)
+          clearInterval(timer)
+        } else {
+          setCount(Math.floor(start))
+        }
+      }, 16)
+      return () => clearInterval(timer)
+    }
+  }, [isInView, value])
+  
+  return <span ref={ref}>{count}{suffix}</span>
+}
+
 const StatCounter = ({ value, label, suffix = "" }: { value: number, label: string, suffix?: string }) => {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
@@ -222,8 +247,8 @@ export default function LandingPage() {
           <GravityStarsBackground className="opacity-20" />
           
           <div className="absolute inset-0 z-0">
-             <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-[#00685f]/5 blur-[120px] rounded-full animate-pulse" />
-             <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-[#00bfa5]/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+             <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-gradient-to-br from-[#7C3AED]/10 to-[#00685f]/10 blur-[120px] rounded-full animate-pulse" />
+             <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-gradient-to-br from-[#F59E0B]/10 to-[#0EA5E9]/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
           </div>
           
           <div className="max-w-7xl mx-auto relative z-10 text-center space-y-16">
@@ -270,11 +295,29 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Stats Section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 pt-24 max-w-4xl mx-auto">
-              <StatCounter value={50} label="Premium Courses" suffix="+" />
-              <StatCounter value={1200} label="Professionals" suffix="+" />
-              <StatCounter value={98} label="Success Rate" suffix="%" />
-              <StatCounter value={24} label="Support" suffix="/7" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-24 max-w-4xl mx-auto">
+              {[
+                { value: 50, label: "Premium Courses", suffix: "+", bg: "bg-[#00685f]", text: "text-white" },
+                { value: 1200, label: "Professionals", suffix: "+", bg: "bg-[#7C3AED]", text: "text-white" },
+                { value: 98, label: "Success Rate", suffix: "%", bg: "bg-[#F59E0B]", text: "text-white" },
+                { value: 24, label: "Support", suffix: "/7", bg: "bg-[#131b2e]", text: "text-white" },
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  className={`${stat.bg} rounded-[2rem] p-8 text-center`}
+                >
+                  <div className="text-4xl md:text-5xl font-black text-white mb-2">
+                    <StatCounterInner value={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.2em] text-white/70">
+                    {stat.label}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
@@ -296,19 +339,19 @@ export default function LandingPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                  {[
-                   { title: "Course Builder", desc: "Engaging ISO standards translated into interactive, retention-optimized paths.", icon: Layers, color: "bg-[#ebfaf8]" },
-                   { title: "Progress Analytics", desc: "Live tracking and performance metrics to keep your learning goals on schedule.", icon: Activity, color: "bg-[#f0fdf4]" },
-                   { title: "Data Security", desc: "Enterprise-grade protection for your professional and corporate training data.", icon: ShieldCheck, color: "bg-[#fffaf0]" },
-                   { title: "Global Accessibility", desc: "Seamless course delivery across any device, anywhere in the world.", icon: Globe2, color: "bg-[#f5faff]" },
-                   { title: "Expert Support", desc: "Access to compliance specialists to guide you through complex certification steps.", icon: MessageCircle, color: "bg-[#fef2f2]" },
-                   { title: "Recognition", desc: "Industry-recognized seals and certificates to validate your professional expertise.", icon: Trophy, color: "bg-[#fffbeb]" },
+                   { title: "Course Builder", desc: "Engaging ISO standards translated into interactive, retention-optimized paths.", icon: Layers, color: "bg-[#00685f]", iconColor: "text-white", hoverBorder: "hover:border-t-[#00685f]" },
+                   { title: "Progress Analytics", desc: "Live tracking and performance metrics to keep your learning goals on schedule.", icon: Activity, color: "bg-[#7C3AED]", iconColor: "text-white", hoverBorder: "hover:border-t-[#7C3AED]" },
+                   { title: "Data Security", desc: "Enterprise-grade protection for your professional and corporate training data.", icon: ShieldCheck, color: "bg-[#0EA5E9]", iconColor: "text-white", hoverBorder: "hover:border-t-[#0EA5E9]" },
+                   { title: "Global Accessibility", desc: "Seamless course delivery across any device, anywhere in the world.", icon: Globe2, color: "bg-[#F59E0B]", iconColor: "text-white", hoverBorder: "hover:border-t-[#F59E0B]" },
+                   { title: "Expert Support", desc: "Access to compliance specialists to guide you through complex certification steps.", icon: MessageCircle, color: "bg-[#F43F5E]", iconColor: "text-white", hoverBorder: "hover:border-t-[#F43F5E]" },
+                   { title: "Recognition", desc: "Industry-recognized seals and certificates to validate your professional expertise.", icon: Trophy, color: "bg-[#131b2e]", iconColor: "text-white", hoverBorder: "hover:border-t-[#131b2e]" },
                  ].map((feat, i) => (
                     <motion.div 
                       key={i}
                       whileHover={{ y: -10 }}
-                      className="p-12 bg-[#fafcfc] border border-[#00685f]/5 rounded-[44px] space-y-8 transition-all hover:bg-white hover:shadow-[0_40px_80px_-20px_rgba(0,104,95,0.08)] group"
+                      className={`p-12 bg-[#fafcfc] border border-[#00685f]/5 border-t-4 border-t-transparent ${feat.hoverBorder} rounded-[44px] space-y-8 transition-all hover:bg-white hover:shadow-[0_40px_80px_-20px_rgba(0,104,95,0.08)] group`}
                     >
-                       <div className={`w-16 h-16 ${feat.color} rounded-2xl flex items-center justify-center text-[#131b2e] shadow-sm transition-transform group-hover:scale-110 group-hover:rotate-6`}>
+                       <div className={`w-16 h-16 ${feat.color} ${feat.iconColor} rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 group-hover:rotate-6`}>
                           <feat.icon className="w-8 h-8" />
                        </div>
                        <div className="space-y-4">
@@ -473,22 +516,31 @@ export default function LandingPage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="py-64 px-10 bg-[#fafcfc] relative overflow-hidden text-center flex flex-col items-center">
+        <section className="py-64 px-10 bg-[#131b2e] relative overflow-hidden text-center flex flex-col items-center">
+           <GravityStarsBackground className="opacity-10" />
            <div className="max-w-6xl mx-auto relative z-10 space-y-24 flex flex-col items-center">
               <div className="space-y-10">
-                 <SectionNotice text="Start Your Journey" />
-                 <h2 className="text-6xl md:text-[9rem] font-black text-[#131b2e] tracking-tighter leading-[0.8] mb-8">
-                    Ready to <br className="md:hidden" /> <span className="text-[#00685f]">Certify?</span>
+                 <motion.div
+                   initial={{ opacity: 0, scale: 0.95 }}
+                   whileInView={{ opacity: 1, scale: 1 }}
+                   viewport={{ once: true }}
+                   className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-white/5 border border-white/20 rounded-full mb-8 shadow-sm group transition-colors"
+                 >
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/40 group-hover:bg-[#00bfa5] transition-colors animate-pulse" />
+                   <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">Start Your Journey</span>
+                 </motion.div>
+                 <h2 className="text-6xl md:text-[9rem] font-black text-white tracking-tighter leading-[0.8] mb-8">
+                    Ready to <br className="md:hidden" /> <span className="text-[#00bfa5]">Certify?</span>
                  </h2>
-                 <p className="text-xl font-medium text-[#6d7a77] max-w-xl mx-auto">
+                 <p className="text-xl font-medium text-white/60 max-w-xl mx-auto">
                     Join thousands of compliance leaders and start your certification journey today with our expert-led platform.
                  </p>
               </div>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-10 pt-6">
-                 <Link href="/register" className="w-full sm:w-auto px-20 py-8 bg-[#131b2e] text-white rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-2xl hover:bg-[#00685f] hover:translate-y-[-4px] active:translate-y-0 transition-all">
+                 <Link href="/register" className="w-full sm:w-auto px-20 py-8 bg-[#00685f] text-white rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-2xl hover:translate-y-[-4px] active:translate-y-0 transition-all">
                     Register Free
                  </Link>
-                 <button className="w-full sm:w-auto px-16 py-8 bg-white border border-[#131b2e]/10 text-[#131b2e] rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-sm hover:border-[#131b2e] hover:shadow-xl transition-all">
+                 <button className="w-full sm:w-auto px-16 py-8 bg-white/10 border border-white/20 text-white rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-sm hover:bg-white/20 hover:shadow-xl transition-all">
                     Contact Sales
                  </button>
               </div>
@@ -496,7 +548,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="bg-white py-48 px-8 border-t border-[#00685f]/5 relative z-10">
+      <footer className="bg-[#fafcfc] py-48 px-8 border-t-2 border-[#00685f]/10 relative z-10">
          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-32">
             <div className="space-y-12 group">
                <div className="flex items-center gap-4">
