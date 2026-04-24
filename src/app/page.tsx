@@ -315,7 +315,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="text-6xl sm:text-8xl md:text-[9rem] font-black text-[#131b2e] tracking-tighter leading-[0.85]"
+                className="text-6xl sm:text-8xl md:text-[8rem] lg:text-[9rem] font-black text-[#131b2e] tracking-tighter leading-[0.85] break-words"
                 >
                 Better Skills. <br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00685f] via-[#00bfa5] to-teal-400">
@@ -548,7 +548,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, margin: "-100px" }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="max-w-[1600px] w-full mx-auto"
+            className="max-w-[1600px] w-full mx-auto min-w-0"
           >
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 px-2 xl:px-6 mb-16">
               <div className="space-y-6">

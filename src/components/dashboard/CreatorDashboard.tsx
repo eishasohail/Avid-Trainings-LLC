@@ -53,7 +53,7 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
   ];
 
   return (
-    <div className="space-y-10 sm:space-y-12">
+    <div className="space-y-10 sm:space-y-12 flex-1 min-w-0 overflow-hidden">
       
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 animate-fade-in-up">
         <div className="space-y-2">
@@ -71,9 +71,9 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
       </header>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up stagger-1">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full animate-fade-in-up stagger-1">
         {stats.map((stat, i) => (
-          <div key={i} className="group bg-white rounded-[40px] border border-[#bcc9c6]/40 p-1 relative overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 hover:-translate-y-2">
+          <div key={i} className="group bg-white rounded-[40px] border border-[#bcc9c6]/40 p-1 relative min-w-0 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 hover:-translate-y-2">
             <div className="p-8 flex flex-col justify-between h-full space-y-8">
               <div className="flex items-center justify-between">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white ${stat.color} shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
@@ -89,9 +89,9 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in-up stagger-2 pb-10">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 w-full animate-fade-in-up stagger-2 pb-10">
         {/* Recent Activity */}
-        <section className="lg:col-span-2 bg-white rounded-[48px] border border-[#bcc9c6]/40 p-8 sm:p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500">
+        <section className="xl:col-span-2 min-w-0 overflow-hidden bg-white rounded-[48px] border border-[#bcc9c6]/40 p-8 sm:p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500">
            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#bcc9c6]/10 pb-8 gap-6">
               <h3 className="text-xl sm:text-2xl font-black text-[#191c1e] tracking-tight flex items-center gap-3">
                  <Activity className="w-7 h-7 text-[#00685f]" /> Recent Activity
@@ -148,7 +148,7 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
         </section>
 
         {/* Activity Timeline */}
-        <section className="bg-white rounded-[48px] border border-[#bcc9c6]/40 p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500 overflow-hidden relative">
+        <section className="xl:col-span-1 min-w-0 bg-white rounded-[48px] border border-[#bcc9c6]/40 p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500 overflow-hidden relative">
            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00685f]/5 blur-2xl rounded-full" />
            <h3 className="text-xl sm:text-2xl font-black text-[#191c1e] tracking-tight">Activity Timeline</h3>
            <div className="space-y-8 relative">
