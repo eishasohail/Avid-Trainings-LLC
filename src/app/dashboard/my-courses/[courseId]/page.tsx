@@ -90,7 +90,7 @@ export default function CourseOverviewPage() {
       localStorage.setItem('avid-courses', JSON.stringify(filtered));
     }
 
-    router.push('/dashboard/courses');
+    router.push('/dashboard/my-courses');
   };
 
   if (!course && !isLoading) {
@@ -104,7 +104,7 @@ export default function CourseOverviewPage() {
             <h2 className="text-2xl font-black text-[#191c1e] tracking-tight">Course not found</h2>
             <p className="text-[#6d7a77] mt-2 font-medium">The course you are looking for does not exist or has been removed.</p>
             <button 
-              onClick={() => router.push('/dashboard/courses')}
+              onClick={() => router.push('/dashboard/my-courses')}
               className="mt-10 px-10 py-4 bg-[#00685f] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-[#00685f]/20 hover:bg-[#004d46] transition-all active:scale-95"
             >
               Back to My Courses
@@ -137,7 +137,7 @@ export default function CourseOverviewPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm text-[#565e74] font-semibold">
                   <button 
-                    onClick={() => router.push('/dashboard/courses')}
+                    onClick={() => router.push('/dashboard/my-courses')}
                     className="hover:text-[#00685f] transition-colors flex items-center"
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" /> My Courses

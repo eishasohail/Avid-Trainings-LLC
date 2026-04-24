@@ -3,12 +3,16 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { auth } from '@/lib/firebase/config';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import Logo from "@/components/shared/Logo";
 import { 
   motion, 
   useScroll, 
   useTransform, 
   useInView, 
-  AnimatePresence
+  AnimatePresence,
+  useSpring
 } from "framer-motion";
 import { 
   ShieldCheck, 
@@ -56,9 +60,12 @@ import {
 
 import { GravityStarsBackground } from '@/components/animate-ui/components/backgrounds/gravity-stars';
 import { HexagonBackground } from '@/components/animate-ui/components/backgrounds/hexagon';
+import { BubbleBackground } from '@/components/animate-ui/components/backgrounds/bubble';
 import { RadialIntro } from '@/components/animate-ui/components/community/radial-intro';
+import type { Course } from '@/lib/data/dummyData';
+import { getAllCourses } from '@/lib/utils/courseUtils'
 import { RadialNav } from '@/components/animate-ui/components/community/radial-nav';
-import { DUMMY_COURSES, getPublishedCourses } from '@/lib/data/dummyData';
+import { DUMMY_COURSES } from '@/lib/data/dummyData';
 
 const COMMUNITY_ITEMS = [
   { id: 1, name: 'Framer University', src: 'https://pbs.twimg.com/profile_images/1602734731728142336/9Bppcs67_400x400.jpg' },
@@ -81,7 +88,7 @@ const NAV_ITEMS = [
 const StatCounterInner = ({ value, suffix }: { value: number, suffix: string }) => {
   const [count, setCount] = useState(0)
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
+  const isInView = useInView(ref, { once: false })
   
   useEffect(() => {
     if (isInView) {
@@ -106,7 +113,7 @@ const StatCounterInner = ({ value, suffix }: { value: number, suffix: string }) 
 const StatCounter = ({ value, label, suffix = "" }: { value: number, label: string, suffix?: string }) => {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
+  const isInView = useInView(ref, { once: false });
 
   useEffect(() => {
     if (isInView) {
@@ -142,7 +149,7 @@ const SectionNotice = ({ text }: { text: string }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.95 }}
     whileInView={{ opacity: 1, scale: 1 }}
-    viewport={{ once: true }}
+    viewport={{ once: false }}
     className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-white border border-[#00685f]/15 rounded-full mb-8 shadow-sm group hover:border-[#00685f]/30 transition-colors"
   >
     <div className="w-1.5 h-1.5 rounded-full bg-[#00685f]/40 group-hover:bg-[#00685f] transition-colors animate-pulse" />
@@ -151,15 +158,40 @@ const SectionNotice = ({ text }: { text: string }) => (
 );
 
 export default function LandingPage() {
+  const [user] = useAuthState(auth);
   const router = useRouter();
-  const [scrolled, setScrolled] = useState(false);
-  const [activeHash, setActiveHash] = useState("#home");
+  const [activeHash, setActiveHash] = useState<string>('#home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   
+  const [courses, setCourses] = useState<any[]>([])
+  const journeyRef = useRef(null);
+  const { scrollYProgress: journeyProgress } = useScroll({
+    target: journeyRef,
+    offset: ["start 85%", "end 15%"]
+  });
+
+  const smoothJourneyProgress = useSpring(journeyProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  const lineHeight = useTransform(smoothJourneyProgress, [0, 1], ["0%", "100%"]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const all = getAllCourses()
+    const published = all.filter(
+      c => c.status === 'published'
+    )
+    setCourses(published)
+  }, [])
+
   const sections = ["home", "features", "curriculum", "methodology", "enterprise"];
   const { scrollYProgress } = useScroll();
 
-  const featuredCourses = useMemo(() => getPublishedCourses().slice(0, 3), []);
+  const featuredCourses = useMemo(() => courses.slice(0, 3), [courses]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -200,14 +232,12 @@ export default function LandingPage() {
           ? "bg-white/80 backdrop-blur-xl border-b border-[#00685f]/5 py-4 shadow-sm" 
           : "bg-transparent py-7"
       }`}>
-        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
+        <div className="max-w-[1600px] w-full mx-auto px-8 xl:px-12 flex items-center justify-between">
           <div className="flex items-center gap-14">
-            <button onClick={() => scrollToSection('home')} className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-[#131b2e] rounded-xl flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:rotate-6 shadow-lg">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <span className="text-xl font-black text-[#131b2e] tracking-tighter">Avid <span className="text-[#00685f]">Trainings</span></span>
-            </button>
+            <Logo 
+              size="sm" 
+              destination={user ? '/dashboard' : '/'}
+            />
             <div className="hidden lg:flex items-center gap-10">
               {[
                 { name: "Courses", id: "curriculum" },
@@ -231,10 +261,36 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex items-center gap-8">
-            <Link href="/login" className="hidden sm:block text-[11px] font-black uppercase tracking-widest text-[#6d7a77] hover:text-[#00685f] transition-all">Login</Link>
-            <Link href="/register" className="px-8 py-3 bg-[#131b2e] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-[#00685f] hover:translate-y-[-2px] active:translate-y-0 transition-all">
-              Get Started
-            </Link>
+            {user ? (
+               <div className="flex items-center gap-3">
+                 <div 
+                   className="w-9 h-9 rounded-xl bg-[#131b2e] flex items-center justify-center text-white font-black text-sm cursor-pointer hover:bg-[#00685f] transition-colors"
+                   onClick={() => router.push('/dashboard')}
+                 >
+                   {user.displayName 
+                     ? user.displayName[0].toUpperCase() 
+                     : user.email?.[0].toUpperCase() || 'U'}
+                 </div>
+                 <button
+                   onClick={() => router.push('/dashboard')}
+                   className="px-5 py-2.5 bg-[#00685f] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#131b2e] transition-all"
+                 >
+                   Dashboard
+                 </button>
+               </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => router.push('/login')}
+                  className="hidden sm:block text-[11px] font-black uppercase tracking-widest text-[#6d7a77] hover:text-[#00685f] transition-all"
+                >
+                  Login
+                </button>
+                <Link href="/register" className="px-8 py-3 bg-[#131b2e] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-[#00685f] hover:translate-y-[-2px] active:translate-y-0 transition-all">
+                  Get Started
+                </Link>
+              </>
+            )}
             <button className="lg:hidden text-[#11221f]" onClick={() => setMobileMenuOpen(true)}>
                <Menu className="w-6 h-6" />
             </button>
@@ -294,37 +350,124 @@ export default function LandingPage() {
                </button>
             </motion.div>
 
-            {/* Stats Section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-24 max-w-4xl mx-auto">
-              {[
-                { value: 50, label: "Premium Courses", suffix: "+", bg: "bg-[#00685f]", text: "text-white" },
-                { value: 1200, label: "Professionals", suffix: "+", bg: "bg-[#7C3AED]", text: "text-white" },
-                { value: 98, label: "Success Rate", suffix: "%", bg: "bg-[#F59E0B]", text: "text-white" },
-                { value: 24, label: "Support", suffix: "/7", bg: "bg-[#131b2e]", text: "text-white" },
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  className={`${stat.bg} rounded-[2rem] p-8 text-center`}
-                >
-                  <div className="text-4xl md:text-5xl font-black text-white mb-2">
-                    <StatCounterInner value={stat.value} suffix={stat.suffix} />
+            {/* ENHANCEMENT 1 — Hero Floating UI Mockup */}
+            <div className="relative w-full max-w-4xl mx-auto mt-16 group">
+              <div className="absolute inset-0 bg-[#00685f]/20 blur-3xl rounded-[3rem] -z-10 scale-95" />
+              <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: [0, -10, 0] 
+                }}
+                transition={{ 
+                  delay: 0.5, 
+                  duration: 4, 
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="relative w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200/60"
+                style={{
+                  perspective: '1000px',
+                  transform: 'rotateX(5deg)',
+                  boxShadow: '0 32px 80px -12px rgba(0,104,95,0.15), 0 0 0 1px rgba(0,104,95,0.05)'
+                }}
+              >
+                {/* Browser chrome bar */}
+                <div className="h-10 bg-slate-50 border-b border-slate-100 flex items-center px-4 gap-2">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-400" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                    <div className="w-3 h-3 rounded-full bg-green-400" />
                   </div>
-                  <div className="text-[11px] font-black uppercase tracking-[0.2em] text-white/70">
-                    {stat.label}
+                  <div className="flex-1 mx-4">
+                    <div className="h-5 bg-slate-200 rounded-full w-64 mx-auto" />
                   </div>
-                </motion.div>
-              ))}
+                </div>
+
+                {/* Dashboard preview content */}
+                <div className="p-6 bg-[#f7f9fb] text-left">
+                  {/* Top stat cards row */}
+                  <div className="grid grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: 'PREMIUM COURSES', value: '15+', color: 'bg-[#00685f]' },
+                      { label: 'PROFESSIONALS', value: '1200+', color: 'bg-purple-500' },
+                      { label: 'SUCCESS RATE', value: '98%', color: 'bg-amber-500' },
+                      { label: 'SUPPORT', value: '24/7', color: 'bg-[#131b2e]' },
+                    ].map((stat) => (
+                      <div key={stat.label} className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
+                        <div className={`w-6 h-6 ${stat.color} rounded-lg mb-2`} />
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
+                          {stat.label}
+                        </p>
+                        <p className="text-lg font-black text-[#131b2e]">{stat.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Course cards row */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { title: 'ISO 27001', progress: 65, color: 'from-[#131b2e] to-[#00685f]' },
+                      { title: 'ISO 9001', progress: 100, color: 'from-[#00685f] to-teal-400' },
+                      { title: 'ISO 14001', progress: 30, color: 'from-slate-700 to-slate-900' },
+                    ].map((course) => (
+                      <div key={course.title} className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100">
+                        <div className={`h-16 bg-gradient-to-br ${course.color}`} />
+                        <div className="p-3">
+                          <p className="text-xs font-black text-[#131b2e] mb-2">{course.title}</p>
+                          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-[#00685f] rounded-full"
+                              style={{ width: `${course.progress}%` }}
+                            />
+                          </div>
+                          <p className="text-[9px] text-slate-400 mt-1 font-black">{course.progress}%</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
         </section>
 
+        {/* ENHANCEMENT 2 — Marquee ticker bar */}
+        <div className="w-full bg-[#131b2e] py-3 overflow-hidden">
+          <div className="flex animate-marquee whitespace-nowrap">
+            {[...Array(6)].map((_, i) => (
+              <span key={i} className="mx-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/60 flex items-center gap-4">
+                ISO 27001 
+                <span className="text-[#00685f]">•</span> 
+                ISO 9001 
+                <span className="text-[#00685f]">•</span> 
+                ISO 14001 
+                <span className="text-[#00685f]">•</span> 
+                ISO 45001 
+                <span className="text-[#00685f]">•</span> 
+                Information Security 
+                <span className="text-[#00685f]">•</span> 
+                Quality Management 
+                <span className="text-[#00685f]">•</span> 
+                Environmental Standards 
+                <span className="text-[#00685f]">•</span> 
+                CPD Certified 
+                <span className="text-[#00685f]">•</span> 
+                Expert-Led Courses 
+                <span className="text-[#00685f]">•</span>
+              </span>
+            ))}
+          </div>
+        </div>
         {/* FEATURES */}
         <section id="features" className="py-64 px-8 bg-white relative overflow-hidden">
-           <div className="max-w-7xl mx-auto space-y-32">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, margin: "-100px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="max-w-7xl mx-auto space-y-32"
+          >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-end">
                   <div className="space-y-10">
                     <SectionNotice text="The Academy Experience" />
@@ -337,124 +480,208 @@ export default function LandingPage() {
                   </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-                 {[
-                   { title: "Course Builder", desc: "Engaging ISO standards translated into interactive, retention-optimized paths.", icon: Layers, color: "bg-[#00685f]", iconColor: "text-white", hoverBorder: "hover:border-t-[#00685f]" },
-                   { title: "Progress Analytics", desc: "Live tracking and performance metrics to keep your learning goals on schedule.", icon: Activity, color: "bg-[#7C3AED]", iconColor: "text-white", hoverBorder: "hover:border-t-[#7C3AED]" },
-                   { title: "Data Security", desc: "Enterprise-grade protection for your professional and corporate training data.", icon: ShieldCheck, color: "bg-[#0EA5E9]", iconColor: "text-white", hoverBorder: "hover:border-t-[#0EA5E9]" },
-                   { title: "Global Accessibility", desc: "Seamless course delivery across any device, anywhere in the world.", icon: Globe2, color: "bg-[#F59E0B]", iconColor: "text-white", hoverBorder: "hover:border-t-[#F59E0B]" },
-                   { title: "Expert Support", desc: "Access to compliance specialists to guide you through complex certification steps.", icon: MessageCircle, color: "bg-[#F43F5E]", iconColor: "text-white", hoverBorder: "hover:border-t-[#F43F5E]" },
-                   { title: "Recognition", desc: "Industry-recognized seals and certificates to validate your professional expertise.", icon: Trophy, color: "bg-[#131b2e]", iconColor: "text-white", hoverBorder: "hover:border-t-[#131b2e]" },
-                 ].map((feat, i) => (
-                    <motion.div 
-                      key={i}
-                      whileHover={{ y: -10 }}
-                      className={`p-12 bg-[#fafcfc] border border-[#00685f]/5 border-t-4 border-t-transparent ${feat.hoverBorder} rounded-[44px] space-y-8 transition-all hover:bg-white hover:shadow-[0_40px_80px_-20px_rgba(0,104,95,0.08)] group`}
-                    >
-                       <div className={`w-16 h-16 ${feat.color} ${feat.iconColor} rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 group-hover:rotate-6`}>
-                          <feat.icon className="w-8 h-8" />
-                       </div>
-                       <div className="space-y-4">
-                          <h3 className="text-2xl font-black text-[#131b2e] tracking-tight">{feat.title}</h3>
-                          <p className="text-base font-medium text-[#6d7a77] leading-relaxed">{feat.desc}</p>
-                       </div>
-                    </motion.div>
-                 ))}
+              <div className="relative">
+                 {/* Ambient Background Glow */}
+                 <div className="absolute -inset-10 bg-gradient-to-tr from-[#00685f]/5 via-transparent to-teal-400/5 blur-3xl -z-10 rounded-full animate-pulse-slow" />
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                    {[
+                      { title: "Course Builder", desc: "Engaging ISO standards translated into interactive, retention-optimized paths.", icon: Layers, color: "bg-[#00685f]", iconColor: "text-white", hoverBorder: "hover:border-t-[#00685f]" },
+                      { title: "Progress Analytics", desc: "Live tracking and performance metrics to keep your learning goals on schedule.", icon: Activity, color: "bg-[#7C3AED]", iconColor: "text-white", hoverBorder: "hover:border-t-[#7C3AED]" },
+                      { title: "Data Security", desc: "Enterprise-grade protection for your professional and corporate training data.", icon: ShieldCheck, color: "bg-[#0EA5E9]", iconColor: "text-white", hoverBorder: "hover:border-t-[#0EA5E9]" },
+                      { title: "Global Accessibility", desc: "Seamless course delivery across any device, anywhere in the world.", icon: Globe2, color: "bg-[#F59E0B]", iconColor: "text-white", hoverBorder: "hover:border-t-[#F59E0B]" },
+                      { title: "Expert Support", desc: "Access to compliance specialists to guide you through complex certification steps.", icon: MessageCircle, color: "bg-[#F43F5E]", iconColor: "text-white", hoverBorder: "hover:border-t-[#F43F5E]" },
+                      { title: "Recognition", desc: "Industry-recognized seals and certificates to validate your professional expertise.", icon: Trophy, color: "bg-[#131b2e]", iconColor: "text-white", hoverBorder: "hover:border-t-[#131b2e]" },
+                    ].map((feat, i) => (
+                       <motion.div 
+                         key={i}
+                         initial={{ 
+                           opacity: 0, 
+                           x: i % 2 === 0 ? -100 : 100,
+                           y: 20
+                         }}
+                         whileInView={{ 
+                           opacity: 1, 
+                           x: 0,
+                           y: 0 
+                         }}
+                         viewport={{ once: false, margin: "-50px" }}
+                         transition={{ 
+                           duration: 0.8, 
+                           delay: i * 0.1,
+                           ease: [0.16, 1, 0.3, 1] 
+                         }}
+                         whileHover={{ 
+                           y: -15,
+                           scale: 1.02,
+                           boxShadow: '0 40px 100px -20px rgba(0,104,95,0.15)' 
+                         }}
+                         className={`p-12 bg-white/60 backdrop-blur-sm border border-[#00685f]/10 border-t-4 border-t-transparent ${feat.hoverBorder} rounded-[44px] space-y-8 transition-all hover:bg-white group relative overflow-hidden`}
+                       >
+                          {/* Inner card glow */}
+                          <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-[#00685f]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          
+                          <motion.div 
+                            className={`w-16 h-16 ${feat.color} ${feat.iconColor} rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 group-hover:rotate-12`}
+                          >
+                             <feat.icon className="w-8 h-8" />
+                          </motion.div>
+                          <div className="space-y-4 relative z-10">
+                             <h3 className="text-2xl font-black text-[#131b2e] tracking-tight group-hover:text-[#00685f] transition-colors">{feat.title}</h3>
+                             <p className="text-base font-medium text-[#6d7a77] leading-relaxed line-clamp-3">{feat.desc}</p>
+                          </div>
+                       </motion.div>
+                    ))}
+                 </div>
               </div>
-           </div>
+           </motion.div>
         </section>
 
-        {/* CURRICULUM */}
-        <section id="curriculum" className="py-64 px-8 bg-[#fafcfc] relative">
-           <div className="max-w-7xl mx-auto space-y-32 relative z-10">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-16">
-                 <div className="space-y-10">
-                   <SectionNotice text="Featured Courses" />
-                   <h2 className="text-5xl md:text-8xl font-black text-[#131b2e] tracking-tighter leading-[0.85]">
-                      Premier <br/> ISO <span className="text-[#00685f]">Library.</span>
-                   </h2>
-                 </div>
-                 <p className="max-w-[320px] text-xl font-semibold text-[#6d7a77] leading-relaxed italic opacity-70">
-                    A curated selection of the world's most sought-after ISO certifications.
-                 </p>
-              </div>
+        {/* ENHANCEMENT 3 — Course Showcase Section */}
+        <section id="curriculum" className="py-48 px-6 bg-[#f7f9fb] relative overflow-hidden">
+          {/* Background Glows */}
+          <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-[#00685f]/8 rounded-full blur-[100px] -z-10 -translate-y-1/2" />
+          <div className="absolute top-1/2 right-1/4 w-[400px] h-[400px] bg-teal-400/6 rounded-full blur-[80px] -z-10 -translate-y-1/2" />
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                 {featuredCourses.map((course, i) => {
-                    const grads = [
-                      "from-[#131b2e] to-[#0b514c]",
-                      "from-[#00685f] to-[#00bfa5]",
-                      "from-[#00bfa5] to-emerald-400"
-                    ];
-                    return (
-                      <motion.div 
-                        key={course.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8, delay: i * 0.1 }}
-                        viewport={{ once: true }}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, margin: "-100px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="max-w-[1600px] w-full mx-auto"
+          >
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 px-2 xl:px-6 mb-16">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#bcc9c6]/10 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#6d7a77] tracking-[0.3em]">OUR COURSES</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter text-[#131b2e] leading-[0.9]">
+                  ISO Certifications <br/>
+                  <span className="text-[#00685f]">That Matter.</span>
+                </h2>
+              </div>
+              <div className="max-w-md space-y-6">
+                <p className="text-lg font-medium text-[#6d7a77]">
+                  Industry-recognized courses built for compliance professionals.
+                </p>
+                <Link href="/courses" className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-[#00685f] hover:text-[#131b2e] transition-colors">
+                  View All Courses <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+              {courses.map((course) => (
+                <motion.div 
+                  key={course.id}
+                  whileHover={{ 
+                    y: -12,
+                    boxShadow: '0 24px 60px -10px rgba(0,104,95,0.25)'
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="shrink-0 min-w-[320px] bg-white rounded-[2rem] overflow-hidden border border-slate-100 flex flex-col group transition-all"
+                >
+                  <div className="h-56 bg-gradient-to-br from-[#131b2e] to-[#00685f] relative flex items-center justify-center">
+                    <div className="absolute top-4 left-4 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
+                      <span className="text-[9px] font-black text-white uppercase tracking-widest">{course.isoStandard}</span>
+                    </div>
+                    <GraduationCap className="w-20 h-20 text-white/20 group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                  <div className="p-6 flex flex-col flex-1">
+                    <h3 className="text-lg font-black text-[#131b2e] leading-tight mb-4 flex-1">{course.title}</h3>
+                    <div className="border-t border-[#f0f4f4] pt-4 mt-auto">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-[#f0f4f4] flex items-center justify-center text-[10px] font-bold text-[#00685f]">
+                            {course.creatorName.charAt(0)}
+                          </div>
+                          <span className="text-xs font-bold text-[#6d7a77]">{course.creatorName}</span>
+                        </div>
+                      </div>
+                      
+                      <div 
                         onClick={() => router.push(`/courses/${course.id}`)}
-                        className="group bg-white border border-[#00685f]/5 rounded-[56px] overflow-hidden shadow-sm hover:shadow-[0_60px_120px_-20px_rgba(0,104,95,0.12)] transition-all duration-1000 flex flex-col cursor-pointer"
+                        className="group relative w-full h-14 bg-slate-50 rounded-2xl overflow-hidden cursor-pointer border border-slate-100 hover:border-[#00685f]/30 transition-all mt-4"
                       >
-                         <div className={`h-[300px] bg-gradient-to-br ${grads[i % grads.length]} p-14 flex flex-col justify-between relative group-hover:scale-105 transition-transform duration-1000`}>
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
-                            <div className="flex justify-between items-start relative z-10">
-                               <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.4em]">{course.isoStandard}</span>
-                               <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-white group-hover:text-[#00685f] transition-all">
-                                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                                </div>
-                            </div>
-                            <h4 className="text-4xl font-black text-white tracking-[0.1em] leading-none uppercase relative z-10">{course.isoStandard}</h4>
-                         </div>
-                         <div className="p-14 flex flex-col justify-between flex-1 relative bg-white">
-                            <div className="space-y-6">
-                               <h3 className="text-3xl font-black text-[#131b2e] group-hover:text-[#00685f] transition-all duration-500">{course.title}</h3>
-                               <p className="text-base font-medium text-[#6d7a77] line-clamp-2 leading-relaxed">{course.description}</p>
-                               <div className="inline-block px-3 py-1 bg-[#f0f4f4] text-[#00685f] text-[9px] font-black uppercase tracking-widest rounded-lg">
-                                  {course.category}
-                               </div>
-                            </div>
-                            <div className="flex items-center pt-10 border-t border-[#f0f4f4] mt-8">
-                               <div 
-                                className="px-10 py-4 border-2 border-[#131b2e]/5 text-[#131b2e] rounded-2xl text-[11px] font-black uppercase tracking-widest group-hover:border-[#00685f] group-hover:bg-[#00685f] group-hover:text-white transition-all duration-500 shadow-sm flex items-center gap-3"
-                               >
-                                  View Course <ArrowRight className="w-4 h-4" />
-                               </div>
-                            </div>
-                         </div>
-                      </motion.div>
-                    );
-                 })}
-              </div>
-
-              <div className="flex justify-center pt-8">
-                 <button 
-                  onClick={() => router.push('/courses')}
-                  className="text-[#00685f] text-sm font-black uppercase tracking-[0.3em] flex items-center gap-2 hover:gap-4 transition-all"
-                 >
-                    Explore All Courses <ArrowRight className="w-5 h-5" />
-                 </button>
-              </div>
-           </div>
+                        {/* Sliding teal background */}
+                        <div className="absolute inset-0 bg-[#00685f] translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+                        
+                        {/* Content */}
+                        <div className="absolute inset-0 flex items-center justify-between px-5">
+                          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#131b2e] group-hover:text-white transition-colors duration-300 relative z-10">
+                            View Course
+                          </span>
+                          <div className="w-8 h-8 rounded-xl bg-[#00685f] group-hover:bg-white flex items-center justify-center transition-colors duration-300 relative z-10">
+                            <ArrowRight size={16} className="text-white group-hover:text-[#00685f] transition-colors duration-300" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </section>
 
         {/* METHODOLOGY */}
-        <section id="methodology" className="py-64 px-10 bg-white relative">
-           <div className="max-w-6xl mx-auto space-y-32">
+        <section ref={journeyRef} id="methodology" className="py-64 px-10 bg-white relative overflow-hidden">
+          {/* Floating Particles */}
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{ 
+                y: [0, -20, 0],
+                opacity: [0.3, 0.8, 0.3]
+              }}
+              transition={{ 
+                duration: 3 + i, 
+                repeat: Infinity,
+                delay: i * 0.8
+              }}
+              className={`absolute w-2 h-2 rounded-full bg-[#00685f]/40 ${
+                i === 0 ? 'top-20 left-20' : 
+                i === 1 ? 'top-40 right-32' : 
+                'bottom-20 left-1/3'
+              }`}
+            />
+          ))}
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, margin: "-100px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="max-w-6xl mx-auto space-y-32"
+          >
               <div className="text-center space-y-10 max-w-4xl mx-auto">
                  <SectionNotice text="How It Works" />
-                  <h2 className="text-4xl md:text-[5.5rem] font-black text-[#131b2e] tracking-tighter leading-[0.85] mb-12">
-                    Your Learning <br/> <span className="text-[#00685f]">Journey.</span>
-                  </h2>
+                 <motion.div
+                   initial={{ opacity: 0, y: 30 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: false }}
+                   transition={{ duration: 0.6 }}
+                 >
+                    <h2 className="text-4xl md:text-[5.5rem] font-black text-[#131b2e] tracking-tighter leading-[0.85] mb-12">
+                      Your Learning <br/> <span className="text-[#00685f]">Journey.</span>
+                    </h2>
+                 </motion.div>
               </div>
 
               <div className="relative pt-20">
-                 <div className="absolute left-[39px] md:left-1/2 top-0 bottom-0 w-1 bg-[#f0f4f4] -translate-x-1/2 overflow-hidden">
-                    <motion.div 
-                       style={{ scaleY: scrollYProgress }}
-                       className="h-full bg-gradient-to-b from-[#00685f] to-[#00bfa5] origin-top rounded-full shadow-[0_0_20px_#00bfa5]"
+                 {/* Track line - always visible, darker grey for contrast */}
+                 <div className="absolute left-[39px] md:left-1/2 top-0 bottom-0 w-1 md:w-1.5 -translate-x-1/2 bg-slate-200 z-0" />
+
+                 {/* Animated teal fill - grows as you scroll */}
+                 <div className="absolute left-[39px] md:left-1/2 top-0 bottom-0 w-1 md:w-1.5 -translate-x-1/2 z-0 overflow-hidden">
+                    <motion.div
+                      style={{ height: lineHeight }}
+                      className="w-full bg-gradient-to-b from-[#00685f] via-[#00bfa5] to-[#00685f] origin-top shadow-[0_0_15px_rgba(0,104,95,0.3)]"
                     />
                  </div>
+
+
+
                  
                  <div className="space-y-56">
                     {[
@@ -465,17 +692,32 @@ export default function LandingPage() {
                     ].map((step, i) => (
                       <motion.div 
                         key={i}
-                        initial={{ opacity: 1, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        className={`flex items-start md:items-center flex-col md:flex-row ${i % 2 !== 0 ? 'md:flex-row-reverse' : ''} gap-16 md:gap-32 relative`}
+                        initial={{ opacity: 0, x: i % 2 === 0 ? -40 : 40 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: false }}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ 
+                          duration: 0.7, 
+                          delay: i * 0.3,
+                          ease: "easeOut" 
+                        }}
+                        className={`flex items-start md:items-center flex-col md:flex-row ${i % 2 !== 0 ? 'md:flex-row-reverse' : ''} gap-16 md:gap-32 relative group`}
                       >
-                         <div className={`absolute left-[39px] md:left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 ${step.color} shadow-2xl rounded-3xl flex items-center justify-center text-white z-10 transition-transform hover:rotate-12 hover:scale-110 border-4 border-white`}>
+                         <motion.div
+                            initial={{ scale: 0, rotate: -180 }}
+                            whileInView={{ scale: 1, rotate: 0 }}
+                            viewport={{ once: false }}
+                            transition={{ 
+                               type: "spring", 
+                               stiffness: 200, 
+                               delay: i * 0.3 + 0.2 
+                            }}
+                            className={`absolute left-[39px] md:left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 ${step.color} shadow-2xl shadow-[#00685f]/20 rounded-3xl flex items-center justify-center text-white z-10 transition-transform group-hover:rotate-12 group-hover:scale-110 border-4 border-white`}
+                         >
                             <step.icon className="w-9 h-9" />
-                         </div>
+                         </motion.div>
                          <div className={`flex-1 space-y-6 text-left pl-28 md:pl-0 ${i % 2 === 0 ? 'md:text-right' : 'md:text-left'}`}>
-                            <div className={`inline-flex items-center gap-2 px-3 py-1 bg-[#bcc9c6]/10 rounded-full mb-2 ${i % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                            <div className={`inline-flex items-center gap-2 px-3 py-1 bg-[#bcc9c6]/10 rounded-full mb-2 ${i % 2 === 0 ? 'md:flex-row-reverse' : ''} shadow-lg shadow-[#00685f]/5`}>
                                <span className="text-[10px] font-black uppercase text-[#6d7a77] tracking-[0.3em]">Step 0{i + 1}</span>
                             </div>
                             <h3 className="text-4xl md:text-5xl font-black text-[#131b2e] tracking-tighter leading-none">{step.title}</h3>
@@ -486,12 +728,18 @@ export default function LandingPage() {
                     ))}
                  </div>
               </div>
-           </div>
+           </motion.div>
         </section>
 
         {/* ENTERPRISE */}
         <section id="enterprise" className="py-48 px-10 bg-white relative overflow-hidden flex flex-col items-center">
-           <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-24 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, margin: "-100px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-24 relative z-10"
+          >
               <div className="flex-1 space-y-12">
                  <SectionNotice text="Our Community" />
                  <h2 className="text-4xl md:text-6xl font-black text-[#131b2e] tracking-tighter leading-tight">
@@ -512,18 +760,27 @@ export default function LandingPage() {
               <div className="flex-1 flex justify-center items-center">
                  <RadialIntro orbitItems={COMMUNITY_ITEMS} />
               </div>
-           </div>
+           </motion.div>
         </section>
 
         {/* FINAL CTA */}
         <section className="py-64 px-10 bg-[#131b2e] relative overflow-hidden text-center flex flex-col items-center">
-           <GravityStarsBackground className="opacity-10" />
-           <div className="max-w-6xl mx-auto relative z-10 space-y-24 flex flex-col items-center">
+           <BubbleBackground 
+             interactive={true}
+             className="absolute inset-0 z-0 opacity-40"
+           />
+           <motion.div
+             initial={{ opacity: 0, y: 40 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: false, margin: "-100px" }}
+             transition={{ duration: 0.7, ease: "easeOut" }}
+             className="max-w-6xl mx-auto relative z-10 space-y-24 flex flex-col items-center"
+           >
               <div className="space-y-10">
                  <motion.div
                    initial={{ opacity: 0, scale: 0.95 }}
                    whileInView={{ opacity: 1, scale: 1 }}
-                   viewport={{ once: true }}
+                   viewport={{ once: false }}
                    className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-white/5 border border-white/20 rounded-full mb-8 shadow-sm group transition-colors"
                  >
                    <div className="w-1.5 h-1.5 rounded-full bg-white/40 group-hover:bg-[#00bfa5] transition-colors animate-pulse" />
@@ -537,26 +794,21 @@ export default function LandingPage() {
                  </p>
               </div>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-10 pt-6">
-                 <Link href="/register" className="w-full sm:w-auto px-20 py-8 bg-[#00685f] text-white rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-2xl hover:translate-y-[-4px] active:translate-y-0 transition-all">
+                 <button 
+                   onClick={() => router.push('/login')}
+                   className="w-full sm:w-auto px-20 py-8 bg-[#00685f] text-white rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-2xl hover:translate-y-[-4px] active:translate-y-0 transition-all"
+                 >
                     Register Free
-                 </Link>
-                 <button className="w-full sm:w-auto px-16 py-8 bg-white/10 border border-white/20 text-white rounded-[32px] text-lg font-black uppercase tracking-[0.4em] shadow-sm hover:bg-white/20 hover:shadow-xl transition-all">
-                    Contact Sales
                  </button>
               </div>
-           </div>
+           </motion.div>
         </section>
       </main>
 
       <footer className="bg-[#fafcfc] py-48 px-8 border-t-2 border-[#00685f]/10 relative z-10">
          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-32">
             <div className="space-y-12 group">
-               <div className="flex items-center gap-4">
-                 <div className="w-14 h-14 bg-[#131b2e] rounded-2xl flex items-center justify-center text-white shadow-xl transition-transform group-hover:rotate-[15deg]">
-                   <ShieldCheck className="w-8 h-8" />
-                 </div>
-                 <span className="text-3xl font-black text-[#131b2e] tracking-tighter leading-none">Avid <span className="text-[#00685f]">Trainings</span></span>
-               </div>
+               <Logo size="md" destination="top" />
                <p className="text-xl font-medium text-[#6d7a77] leading-relaxed max-w-sm">The most refined ISO certification experience for compliance professionals.</p>
                <div className="flex gap-6">
                   {[Globe, Users, ExternalLink].map((Icon, i) => (
@@ -601,12 +853,7 @@ export default function LandingPage() {
             className="fixed inset-0 z-[2000] bg-white p-12 flex flex-col justify-between"
           >
              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-[#131b2e] rounded-2xl flex items-center justify-center text-white shadow-2xl">
-                    <ShieldCheck className="w-8 h-8" />
-                  </div>
-                  <span className="text-2xl font-black text-[#131b2e] tracking-tighter">Avid Trainings</span>
-                </div>
+                 <Logo size="md" />
                 <button onClick={() => setMobileMenuOpen(false)} className="p-4 bg-[#f7f9fb] rounded-3xl text-[#131b2e] active:scale-90 transition-all"><X className="w-8 h-8" /></button>
              </div>
              <div className="flex flex-col gap-10 overflow-y-auto pt-10">

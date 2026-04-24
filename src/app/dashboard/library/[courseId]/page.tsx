@@ -3,7 +3,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import DashboardWrapper from "@/components/dashboard/DashboardWrapper";
+import { auth } from "@/lib/firebase/config";
+import { useAuthState } from "react-firebase-hooks/auth";
+import Logo from "@/components/shared/Logo";
 import {
   Shield,
   Clock,
@@ -20,8 +22,9 @@ import {
   Play,
   ChevronLeft,
   CheckCircle,
-  Award
-} from "lucide-react";
+  Award,
+  ArrowRight
+} from "lucide-react"; // Verified import
 import { getAllCourses } from '@/lib/utils/courseUtils';
 import { 
   getLearnerCountForCourse, 
@@ -33,11 +36,13 @@ export default function CourseLandingPage() {
   const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId as string;
+  const [user, loadingAuth] = useAuthState(auth);
 
   const [course, setCourse] = useState<Course | null>(null);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
     const allCourses = getAllCourses();
@@ -49,6 +54,13 @@ export default function CourseLandingPage() {
     setCourse(found);
     if (found.sections && found.sections.length > 0) {
       setExpandedSections([found.sections[0].id]);
+    }
+
+    // Enrollment check
+    if (typeof window !== 'undefined') {
+      const existing = localStorage.getItem('avid-enrolled-courses');
+      const enrolled = existing ? JSON.parse(existing) : [];
+      setIsEnrolled(enrolled.includes(found.id));
     }
   }, [courseId, router]);
 
@@ -67,6 +79,33 @@ export default function CourseLandingPage() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleEnroll = () => {
+    if (typeof window === 'undefined') return;
+
+    // Read existing enrollments
+    const existing = localStorage.getItem('avid-enrolled-courses');
+    const enrolled: string[] = existing ? JSON.parse(existing) : [];
+    
+    // Add courseId if not already enrolled
+    if (!enrolled.includes(courseId)) {
+      enrolled.push(courseId);
+      localStorage.setItem('avid-enrolled-courses', JSON.stringify(enrolled));
+      
+      // Initialize progress for this course
+      const progressKey = `avid-progress-${courseId}`;
+      if (!localStorage.getItem(progressKey)) {
+        localStorage.setItem(progressKey, JSON.stringify({ 
+          completedLectures: [] 
+        }));
+      }
+      setIsEnrolled(true);
+      showToast("Enrolled successfully!");
+    }
+    
+    // Navigate to Course Viewer
+    router.push(`/dashboard/learn/${courseId}`);
   };
 
   const courseRating = useMemo(() => {
@@ -162,14 +201,31 @@ export default function CourseLandingPage() {
   const otherSuggested = DUMMY_COURSES.filter(c => nextCourses.includes(c.id));
   const moreBySyra = DUMMY_COURSES.filter(c => c.id !== courseId);
 
-  if (!course) return null;
+  if (loadingAuth || !course) return null;
 
   const totalLectures = course.sections.reduce((sum, s) => sum + s.lectures.length, 0);
 
   return (
-    <DashboardWrapper loadingMessage="Securing Course Data...">
-      {(user) => (
-        <div className="flex-1 animate-fade-in-up pb-20 relative bg-[#f7f9fb]">
+    <div className="min-h-screen bg-[#fafcfc] font-sans selection:bg-[#00685f]/15 overflow-x-hidden antialiased text-[#11221f]">
+      
+      {/* Standalone Navbar */}
+      <nav className="fixed top-0 inset-x-0 z-[1000] bg-white/80 backdrop-blur-xl border-b border-[#00685f]/5 py-4 shadow-sm">
+        <div className="max-w-[1600px] w-full mx-auto px-8 xl:px-12 flex items-center justify-between">
+          <Logo size="sm" destination={user ? '/dashboard' : '/'} />
+          <div className="flex items-center gap-8">
+            {user && (
+               <button
+                 onClick={() => router.push('/dashboard')}
+                 className="px-6 py-2.5 bg-[#00685f] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#131b2e] transition-all"
+               >
+                 Dashboard
+               </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      <div className="pt-32 pb-20 relative bg-[#f7f9fb]">
           
           <AnimatePresence>
             {toastMessage && (
@@ -202,7 +258,7 @@ export default function CourseLandingPage() {
           </div>
 
           {/* Hero Section */}
-          <section className="relative bg-[#131b2e] text-white py-20 px-8 overflow-hidden rounded-[40px] mx-4 sm:mx-8 mb-12 shadow-2xl">
+          <section className="relative bg-[#131b2e] text-white py-20 px-8 overflow-hidden rounded-[40px] max-w-7xl mx-auto mb-12 shadow-2xl">
             <div className="absolute inset-0 opacity-10 pointer-events-none">
               <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00685f] rounded-full blur-[120px]"></div>
               <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#00685f] rounded-full blur-[100px]"></div>
@@ -233,7 +289,7 @@ export default function CourseLandingPage() {
           </section>
 
           {/* Grid Content Wrapper */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 relative grid grid-cols-1 lg:grid-cols-3 gap-16">
+          <div className="max-w-7xl mx-auto px-8 relative grid grid-cols-1 lg:grid-cols-3 gap-16">
             
             {/* Left Column (Content) */}
             <div className="lg:col-span-2 space-y-20">
@@ -528,12 +584,14 @@ export default function CourseLandingPage() {
                        <p className="text-[10px] font-black text-[#6d7a77] uppercase tracking-[0.3em]">{getLearnerCountForCourse(courseId)} learners enrolled</p>
                     </div>
 
-                    <button 
-                      onClick={() => alert("Enrollment coming soon!")}
-                      className="w-full py-6 bg-[#00685f] text-white rounded-[24px] font-black text-xs uppercase tracking-widest shadow-2xl shadow-[#00685f]/20 hover:bg-[#131b2e] active:scale-95 transition-all mb-10 flex items-center justify-center gap-3"
-                    >
-                      Enroll Now
-                    </button>
+                    <div>
+                      <button 
+                        onClick={handleEnroll}
+                        className="w-full py-6 bg-[#00685f] text-white rounded-[24px] font-black text-xs uppercase tracking-widest shadow-2xl shadow-[#00685f]/20 hover:bg-[#131b2e] active:scale-95 transition-all mb-10 flex items-center justify-center gap-3"
+                      >
+                        {isEnrolled ? "Continue Learning" : "Enroll Now"} <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
                     
                     <div className="space-y-6">
                       <p className="text-[10px] font-black text-[#565e74] uppercase tracking-[0.5em] mb-8">This course includes:</p>
@@ -565,8 +623,11 @@ export default function CourseLandingPage() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </DashboardWrapper>
+      </div>
+
+      <footer className="bg-white py-24 px-8 border-t border-[#00685f]/5 text-center">
+         <p className="text-sm font-bold text-[#bcc9c6]">© 2026 Avid Trainings LLC. All rights reserved.</p>
+      </footer>
+    </div>
   );
 }

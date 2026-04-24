@@ -155,6 +155,10 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%":      { transform: "translateY(-8px)" },
         },
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-33.333%)' },
+        },
       },
       animation: {
         "fade-in":        "fadeIn 0.5s ease-out",
@@ -167,6 +171,7 @@ const config: Config = {
         "accordion-up":   "accordion-up 0.2s ease-out",
         "float":          "float 3s ease-in-out infinite",
         "pulse-slow":     "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "marquee":        "marquee 25s linear infinite",
       },
 
       backgroundImage: {
@@ -178,7 +183,10 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+  ],
 };
 
 export default config;

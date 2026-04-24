@@ -15,5 +15,14 @@ export const getAllCourses = (): Course[] => {
     ...localCourses.filter(lc => !DUMMY_COURSES.find(dc => dc.id === lc.id))
   ]
   .filter(c => !deletedIds.includes(c.id))
-  .map(c => ({ ...c, ...(overrides[c.id] || {}) }))
+  .map(c => {
+    const override = overrides[c.id] || {}
+    return { 
+      ...c, 
+      ...override,
+      // Always use sections from override if present
+      // as they contain added/edited lectures
+      sections: override.sections || c.sections
+    }
+  })
 }

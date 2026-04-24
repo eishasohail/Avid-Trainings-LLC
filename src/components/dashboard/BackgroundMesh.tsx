@@ -2,12 +2,12 @@
 
 export default function BackgroundMesh() {
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden bg-[#f7f9fb] pointer-events-none">
+    <div className="fixed inset-0 z-0 overflow-hidden bg-[#f4f8f7] pointer-events-none">
       {/* Animated Mesh Gradient */}
-      <div className="absolute inset-0 z-0 overflow-hidden opacity-40">
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-mesh-1 blur-[100px] animate-mesh-slow" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-mesh-2 blur-[100px] animate-mesh-slower" />
-        <div className="absolute top-[20%] right-[10%] w-[40%] h-[40%] rounded-full bg-gradient-mesh-3 blur-[80px] animate-mesh-slowest shadow-[0_0_120px_rgba(0,104,95,0.1)]" />
+      <div className="absolute inset-0 z-0 overflow-hidden opacity-60">
+        <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full bg-gradient-mesh-1 blur-[120px] animate-mesh-slow" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[80%] h-[80%] rounded-full bg-gradient-mesh-2 blur-[120px] animate-mesh-slower" />
+        <div className="absolute top-[30%] right-[10%] w-[50%] h-[50%] rounded-full bg-gradient-mesh-3 blur-[100px] animate-mesh-slowest shadow-[0_0_150px_rgba(0,104,95,0.15)]" />
       </div>
 
       {/* Architectural Dot Grid */}
@@ -44,9 +44,9 @@ export default function BackgroundMesh() {
         .animate-float-slower { animation: float 15s ease-in-out infinite; }
         .animate-float { animation: float 10s ease-in-out infinite; }
 
-        .bg-gradient-mesh-1 { background: radial-gradient(circle at center, rgba(0, 104, 95, 0.15) 0%, transparent 70%); }
-        .bg-gradient-mesh-2 { background: radial-gradient(circle at center, rgba(59, 130, 246, 0.1) 0%, transparent 70%); }
-        .bg-gradient-mesh-3 { background: radial-gradient(circle at center, rgba(168, 85, 247, 0.1) 0%, transparent 70%); }
+        .bg-gradient-mesh-1 { background: radial-gradient(circle at center, rgba(0, 104, 95, 0.2) 0%, transparent 70%); }
+        .bg-gradient-mesh-2 { background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 70%); }
+        .bg-gradient-mesh-3 { background: radial-gradient(circle at center, rgba(0, 104, 95, 0.1) 0%, transparent 70%); }
       `}</style>
     </div>
   );

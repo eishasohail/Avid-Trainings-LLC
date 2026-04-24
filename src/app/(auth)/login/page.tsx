@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LoginForm from "@/components/auth/LoginForm";
+import Logo from "@/components/shared/Logo"
 
 export const metadata: Metadata = {
   title: "Login | Avid Trainings LLC",
@@ -20,13 +21,7 @@ function BrandingPanel() {
       </div>
       
       <header className="flex items-center gap-3 relative z-10">
-        <div className="w-10 h-10 bg-[#00685f] flex items-center justify-center rounded-lg shadow-lg relative overflow-hidden group">
-          <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-          <span className="text-white font-bold text-lg relative z-10">A</span>
-        </div>
-        <span className="text-xl font-extrabold tracking-tight text-[#131b2e]">
-          Avid Trainings LLC
-        </span>
+        <Logo size="lg" destination="/" />
       </header>
 
       <div className="max-w-xl relative z-10">
@@ -121,10 +116,7 @@ export default function LoginPage() {
         <section className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden">
           
           <header className="lg:hidden w-full max-w-md mb-10 flex flex-col items-center text-center relative z-10 animate-fade-in-up">
-            <div className="w-12 h-12 bg-[#00685f] flex items-center justify-center rounded-xl shadow-lg mb-3">
-              <span className="text-white font-bold text-xl">A</span>
-            </div>
-            <h2 className="text-xl font-bold text-[#131b2e]">Avid Trainings LLC</h2>
+            <Logo size="lg" className="mb-3" destination="/" />
           </header>
           
           <div className="relative z-10 w-full flex justify-center animate-fade-in-up stagger-1">

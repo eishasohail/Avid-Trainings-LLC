@@ -177,7 +177,7 @@ export default function CreatorMyCourses({ user }: { user: AuthUser }) {
           return (
             <div 
               key={course.id} 
-              onClick={() => router.push(`/dashboard/courses/${course.id}`)}
+              onClick={() => router.push(`/dashboard/my-courses/${course.id}`)}
               className="group relative bg-white rounded-[40px] border border-[#bcc9c6]/40 overflow-hidden shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all duration-700 flex flex-col h-full cursor-pointer" 
               style={{ animationDelay: `${i * 100}ms` }}
             >

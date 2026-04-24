@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DashboardWrapper from "@/components/dashboard/DashboardWrapper";
+import Logo from "@/components/shared/Logo";
 import { 
   Award, 
   Download, 
@@ -143,15 +144,7 @@ const CertificateModal = ({ isOpen, onClose, cert }: { isOpen: boolean, onClose:
                        
                        {/* Header Logos */}
                        <div className="w-full flex justify-between items-start z-10">
-                          <div className="flex items-center gap-2">
-                             <div className="w-10 h-10 bg-[#131b2e] flex items-center justify-center rounded-lg">
-                                <span className="text-white font-black">A</span>
-                             </div>
-                             <div>
-                                <p className="text-[10px] font-black tracking-tight text-[#131b2e]">AVID</p>
-                                <p className="text-[10px] font-black tracking-tight text-[#131b2e]">TRAININGS</p>
-                             </div>
-                          </div>
+                          <Logo size="md" clickable={false} />
                           <div className="text-right">
                              <p className="text-[8px] font-black text-[#6d7a77] uppercase tracking-[0.2em] mb-1">Official Document</p>
                              <p className="text-[10px] font-black text-[#131b2e]">{cert.id}</p>

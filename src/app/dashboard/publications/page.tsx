@@ -175,7 +175,7 @@ export default function PublicationsPage() {
                                <td className="px-10 py-7 text-right">
                                   <div className="flex items-center justify-end gap-2">
                                      <button 
-                                       onClick={() => router.push(`/dashboard/courses/${p.id}`)}
+                                       onClick={() => router.push(`/dashboard/my-courses/${p.id}`)}
                                        className="p-3 text-[#6d7a77] hover:text-[#00685f] hover:bg-white hover:shadow-lg rounded-2xl transition-all flex items-center gap-2"
                                      >
                                         <Edit3 className="w-5 h-5" />

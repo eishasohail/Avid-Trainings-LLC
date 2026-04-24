@@ -14,6 +14,7 @@ import {
   X
 } from "lucide-react";
 import { getPublishedCourses } from '@/lib/data/dummyData';
+import Logo from "@/components/shared/Logo"
 
 export default function PublicCoursesPage() {
   const router = useRouter();
@@ -31,13 +32,8 @@ export default function PublicCoursesPage() {
     <div className="min-h-screen bg-[#fafcfc] font-sans selection:bg-[#00685f]/15 overflow-x-hidden antialiased text-[#11221f]">
       {/* Public Navbar (Copied from Landing Page) */}
       <nav className="fixed top-0 inset-x-0 z-[1000] bg-white/80 backdrop-blur-xl border-b border-[#00685f]/5 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-[#131b2e] rounded-xl flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:rotate-6 shadow-lg">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <span className="text-xl font-black text-[#131b2e] tracking-tighter">Avid <span className="text-[#00685f]">Trainings</span></span>
-          </Link>
+        <div className="max-w-[1600px] w-full mx-auto px-8 xl:px-12 flex items-center justify-between">
+          <Logo size="md" />
           <div className="flex items-center gap-8">
             <Link href="/login" className="hidden sm:block text-[11px] font-black uppercase tracking-widest text-[#6d7a77] hover:text-[#00685f] transition-all">Login</Link>
             <Link href="/register" className="px-8 py-3 bg-[#131b2e] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-[#00685f] hover:translate-y-[-2px] active:translate-y-0 transition-all">

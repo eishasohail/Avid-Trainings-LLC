@@ -35,7 +35,7 @@ export default function DashboardWrapper({ children, loadingMessage = "Securing 
 
   if (isLoading || !user) {
     return (
-      <div className="bg-[#f7f9fb] min-h-screen flex items-center justify-center p-6">
+      <div className="bg-[#f4f8f7] min-h-screen flex items-center justify-center p-6">
         <div className="flex flex-col items-center gap-6 text-center">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-[#00685f]/10 border-t-[#00685f] rounded-full animate-spin" />
@@ -55,7 +55,7 @@ export default function DashboardWrapper({ children, loadingMessage = "Securing 
   const normalizedRole = user.role.trim().toLowerCase() as any;
 
   return (
-    <div className="min-h-screen font-sans bg-[#f7f9fb] selection:bg-[#00685f]/10 selection:text-[#00685f] overflow-x-hidden">
+    <div className="min-h-screen font-sans bg-[#f4f8f7] selection:bg-[#00685f]/10 selection:text-[#00685f] overflow-x-hidden">
       <BackgroundMesh />
       
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} user={{...user, role: normalizedRole}} />

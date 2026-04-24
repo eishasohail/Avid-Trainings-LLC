@@ -112,7 +112,7 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
                 return (
                   <div 
                     key={course.id} 
-                    onClick={() => router.push(`/dashboard/courses/${course.id}`)}
+                    onClick={() => router.push(`/dashboard/my-courses/${course.id}`)}
                     className="group/item flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-[#f7f9fb] rounded-[32px] hover:bg-white hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-[#bcc9c6]/20 cursor-pointer gap-6"
                   >
                     <div className="flex items-center gap-6">

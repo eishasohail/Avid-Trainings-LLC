@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/shared/Logo";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
@@ -29,15 +30,19 @@ import {
   DUMMY_COURSES,
   Course
 } from '@/lib/data/dummyData';
+import { auth } from "@/lib/firebase/config";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 export default function PublicCourseDetailPage() {
   const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId as string;
+  const [user] = useAuthState(auth);
 
   const [course, setCourse] = useState<Course | null>(null);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
     const allCourses = getAllCourses();
@@ -50,7 +55,37 @@ export default function PublicCourseDetailPage() {
     if (found.sections && found.sections.length > 0) {
       setExpandedSections([found.sections[0].id]);
     }
-  }, [courseId, router]);
+
+    // Check enrollment status
+    if (typeof window !== 'undefined' && user) {
+      const existing = localStorage.getItem('avid-enrolled-courses');
+      const enrolled = existing ? JSON.parse(existing) : [];
+      setIsEnrolled(enrolled.includes(courseId));
+    }
+  }, [courseId, router, user]);
+
+  const handleEnroll = () => {
+    if (typeof window === 'undefined') return;
+
+    if (!user) {
+      router.push(`/login?redirect=/courses/${courseId}`);
+      return;
+    }
+    
+    const existing = localStorage.getItem('avid-enrolled-courses');
+    const enrolled: string[] = existing ? JSON.parse(existing) : [];
+    
+    if (!enrolled.includes(courseId)) {
+      enrolled.push(courseId);
+      localStorage.setItem('avid-enrolled-courses', JSON.stringify(enrolled));
+      localStorage.setItem(
+        `avid-progress-${courseId}`,
+        JSON.stringify({ completedLectures: [] })
+      );
+    }
+    
+    router.push(`/dashboard/learn/${courseId}`);
+  };
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev =>
@@ -166,18 +201,27 @@ export default function PublicCourseDetailPage() {
       
       {/* Public Navbar */}
       <nav className="fixed top-0 inset-x-0 z-[1000] bg-white/80 backdrop-blur-xl border-b border-[#00685f]/5 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-[#131b2e] rounded-xl flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:rotate-6 shadow-lg">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <span className="text-xl font-black text-[#131b2e] tracking-tighter">Avid <span className="text-[#00685f]">Trainings</span></span>
-          </Link>
+        <div className="max-w-[1600px] w-full mx-auto px-8 xl:px-12 flex items-center justify-between">
+          <Logo 
+            size="sm" 
+            destination={user ? '/dashboard' : '/'} 
+          />
           <div className="flex items-center gap-8">
-            <Link href="/login" className="hidden sm:block text-[11px] font-black uppercase tracking-widest text-[#6d7a77] hover:text-[#00685f] transition-all">Login</Link>
-            <Link href="/register" className="px-8 py-3 bg-[#131b2e] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-[#00685f] hover:translate-y-[-2px] active:translate-y-0 transition-all">
-              Get Started
-            </Link>
+            {user ? (
+               <button
+                 onClick={() => router.push('/dashboard')}
+                 className="px-6 py-2.5 bg-[#00685f] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#131b2e] transition-all"
+               >
+                 Go to Dashboard
+               </button>
+            ) : (
+               <>
+                 <Link href="/login" className="hidden sm:block text-[11px] font-black uppercase tracking-widest text-[#6d7a77] hover:text-[#00685f] transition-all">Login</Link>
+                 <Link href="/register" className="px-8 py-3 bg-[#131b2e] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-[#00685f] hover:translate-y-[-2px] active:translate-y-0 transition-all">
+                   Get Started
+                 </Link>
+               </>
+            )}
           </div>
         </div>
       </nav>
@@ -525,10 +569,10 @@ export default function PublicCourseDetailPage() {
                   </div>
 
                   <button 
-                    onClick={() => router.push(`/login?redirect=/courses/${courseId}`)}
+                    onClick={handleEnroll}
                     className="w-full py-6 bg-[#00685f] text-white rounded-[24px] font-black text-xs uppercase tracking-widest shadow-2xl shadow-[#00685f]/20 hover:bg-[#131b2e] active:scale-95 transition-all mb-10 flex items-center justify-center gap-3"
                   >
-                    Enroll Now <ArrowRight className="w-4 h-4" />
+                    {isEnrolled ? "Continue Learning" : "Enroll Now"} <ArrowRight className="w-4 h-4" />
                   </button>
                   
                   <div className="space-y-6">
@@ -563,7 +607,13 @@ export default function PublicCourseDetailPage() {
         </div>
       </div>
 
-      <footer className="bg-white py-24 px-8 border-t border-[#00685f]/5 text-center">
+      <footer className="bg-white py-24 px-8 border-t border-[#00685f]/5 text-center flex flex-col items-center">
+         <div className="mb-8">
+            <Logo size="md" destination="top" />
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">
+              Back to top
+            </p>
+         </div>
          <p className="text-sm font-bold text-[#bcc9c6]">© 2026 Avid Trainings LLC. All rights reserved.</p>
       </footer>
     </div>

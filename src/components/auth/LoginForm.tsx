@@ -56,7 +56,21 @@ function LoginFormContent() {
       setIsSuccess(true);
       setTimeout(() => {
         if (redirectUrl) {
-          router.push(redirectUrl);
+          if (redirectUrl.startsWith('/courses/')) {
+            const courseId = redirectUrl.split('/courses/')[1];
+            if (typeof window !== 'undefined') {
+              const existing = localStorage.getItem('avid-enrolled-courses');
+              const enrolled: string[] = existing ? JSON.parse(existing) : [];
+              if (!enrolled.includes(courseId)) {
+                enrolled.push(courseId);
+                localStorage.setItem('avid-enrolled-courses', JSON.stringify(enrolled));
+                localStorage.setItem(`avid-progress-${courseId}`, JSON.stringify({ completedLectures: [] }));
+              }
+            }
+            router.push(`/dashboard/learn/${courseId}`);
+          } else {
+            router.push(redirectUrl);
+          }
         } else {
           router.push(getRedirectPath(result.user!.role));
         }
@@ -75,7 +89,21 @@ function LoginFormContent() {
       setIsSuccess(true);
       setTimeout(() => {
         if (redirectUrl) {
-          router.push(redirectUrl);
+          if (redirectUrl.startsWith('/courses/')) {
+            const courseId = redirectUrl.split('/courses/')[1];
+            if (typeof window !== 'undefined') {
+              const existing = localStorage.getItem('avid-enrolled-courses');
+              const enrolled: string[] = existing ? JSON.parse(existing) : [];
+              if (!enrolled.includes(courseId)) {
+                enrolled.push(courseId);
+                localStorage.setItem('avid-enrolled-courses', JSON.stringify(enrolled));
+                localStorage.setItem(`avid-progress-${courseId}`, JSON.stringify({ completedLectures: [] }));
+              }
+            }
+            router.push(`/dashboard/learn/${courseId}`);
+          } else {
+            router.push(redirectUrl);
+          }
         } else {
           router.push(getRedirectPath(result.user!.role));
         }
