@@ -220,7 +220,7 @@ export default function CertificatePage() {
             <div className="flex-1 bg-white p-16 flex flex-col relative">
               {/* Logo section */}
               <div className="absolute top-12 right-16 text-right">
-                <Logo size="md" clickable={false} />
+                <Logo size="md" />
               </div>
 
               <div className="mt-8">

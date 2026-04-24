@@ -144,7 +144,7 @@ const CertificateModal = ({ isOpen, onClose, cert }: { isOpen: boolean, onClose:
                        
                        {/* Header Logos */}
                        <div className="w-full flex justify-between items-start z-10">
-                          <Logo size="md" clickable={false} />
+                          <Logo size="md" />
                           <div className="text-right">
                              <p className="text-[8px] font-black text-[#6d7a77] uppercase tracking-[0.2em] mb-1">Official Document</p>
                              <p className="text-[10px] font-black text-[#131b2e]">{cert.id}</p>
