@@ -57,7 +57,7 @@ export default function Sidebar({
         }`}
       >
         {/* Logo Area - White Background */}
-        <div className="px-6 py-8 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 flex items-center justify-between shrink-0">
           <Logo size="sm" destination="/" />
           <button
             onClick={() => setIsOpen(false)}
@@ -69,7 +69,7 @@ export default function Sidebar({
 
         {/* Navigation Area - Teal Background */}
         <div className="flex-1 bg-[#00685f] flex flex-col overflow-hidden">
-          <nav className="flex-1 px-4 py-8 space-y-1.5 overflow-y-auto custom-scrollbar">
+          <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto custom-scrollbar">
             {visibleItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -90,8 +90,8 @@ export default function Sidebar({
             })}
           </nav>
 
-          <div className="px-4 pb-8 space-y-1.5 shrink-0">
-             <div className="h-[1px] bg-white/10 mx-2 mb-6" />
+          <div className="px-4 pb-4 space-y-1.5 shrink-0">
+             <div className="h-[1px] bg-white/10 mx-2 mb-4" />
              <Link
                href="/dashboard/profile"
                onClick={() => setIsOpen(false)}

@@ -53,10 +53,10 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
   ];
 
   return (
-    <div className="space-y-10 sm:space-y-12 flex-1 min-w-0 overflow-hidden">
+    <div className="space-y-6 sm:space-y-8 flex-1 min-w-0 overflow-hidden">
       
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 animate-fade-in-up">
-        <div className="space-y-2">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 animate-fade-in-up">
+        <div className="space-y-0.5">
            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#191c1e] tracking-tighter">Welcome back, {firstName}</h1>
            <p className="text-sm sm:text-base font-medium text-[#6d7a77]">Here's your platform overview.</p>
         </div>
@@ -74,7 +74,7 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full animate-fade-in-up stagger-1">
         {stats.map((stat, i) => (
           <div key={i} className="group bg-white rounded-[40px] border border-[#bcc9c6]/40 p-1 relative min-w-0 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 hover:-translate-y-2">
-            <div className="p-8 flex flex-col justify-between h-full space-y-8">
+            <div className="p-6 flex flex-col justify-between h-full space-y-6">
               <div className="flex items-center justify-between">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white ${stat.color} shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
                   <stat.icon className="w-6 h-6" />
@@ -91,7 +91,7 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 w-full animate-fade-in-up stagger-2 pb-10">
         {/* Recent Activity */}
-        <section className="xl:col-span-2 min-w-0 overflow-hidden bg-white rounded-[48px] border border-[#bcc9c6]/40 p-8 sm:p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500">
+        <section className="xl:col-span-2 min-w-0 overflow-hidden bg-white rounded-[48px] border border-[#bcc9c6]/40 p-6 sm:p-8 shadow-sm space-y-8 group hover:border-[#00685f]/30 transition-all duration-500">
            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#bcc9c6]/10 pb-8 gap-6">
               <h3 className="text-xl sm:text-2xl font-black text-[#191c1e] tracking-tight flex items-center gap-3">
                  <Activity className="w-7 h-7 text-[#00685f]" /> Recent Activity
@@ -113,19 +113,19 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
                   <div 
                     key={course.id} 
                     onClick={() => router.push(`/dashboard/my-courses/${course.id}`)}
-                    className="group/item flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-[#f7f9fb] rounded-[32px] hover:bg-white hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-[#bcc9c6]/20 cursor-pointer gap-6"
+                    className="group/item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#f7f9fb] rounded-[32px] hover:bg-white hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-[#bcc9c6]/20 cursor-pointer gap-4"
                   >
                     <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 rounded-2xl bg-[#00685f] flex items-center justify-center text-white shadow-xl flex-shrink-0">
-                          <BookOpen className="w-7 h-7 opacity-40" />
+                        <div className="w-10 h-10 rounded-xl bg-[#00685f] flex items-center justify-center text-white shadow-xl flex-shrink-0">
+                          <BookOpen className="w-5 h-5 opacity-40" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-lg font-black text-[#191c1e] group-hover/item:text-[#00685f] transition-colors truncate uppercase">{course.title}</h4>
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6d7a77] mt-1">{learnerCount} ENROLLED LEARNERS</p>
+                          <h4 className="text-[13px] font-black text-[#191c1e] group-hover/item:text-[#00685f] transition-colors truncate uppercase">{course.title}</h4>
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#6d7a77] mt-0.5">{learnerCount} ENROLLED LEARNERS</p>
                         </div>
                     </div>
-                    <div className="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
-                        <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                    <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
+                        <div className={`px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${
                           course.status === 'published' 
                             ? 'bg-[#00685f]/5 text-[#00685f] border-[#00685f]/20' 
                             : course.status === 'draft'
@@ -134,11 +134,11 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
                         }`}>
                           {course.status}
                         </div>
-                        <div className="flex items-center justify-end gap-4 w-full sm:w-40">
-                          <div className="h-1.5 flex-1 bg-[#bcc9c6]/20 rounded-full overflow-hidden">
+                        <div className="flex items-center justify-end gap-3 w-full sm:w-32">
+                          <div className="h-1 bg-[#bcc9c6]/20 rounded-full overflow-hidden">
                               <div className="h-full bg-[#00685f] transition-all duration-1000" style={{ width: `${avgProgress}%` }} />
                           </div>
-                          <span className="text-[11px] font-black text-[#191c1e]">{avgProgress}%</span>
+                          <span className="text-[10px] font-black text-[#191c1e]">{avgProgress}%</span>
                         </div>
                     </div>
                   </div>
@@ -148,7 +148,7 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
         </section>
 
         {/* Activity Timeline */}
-        <section className="xl:col-span-1 min-w-0 bg-white rounded-[48px] border border-[#bcc9c6]/40 p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500 overflow-hidden relative">
+        <section className="xl:col-span-1 min-w-0 bg-white rounded-[48px] border border-[#bcc9c6]/40 p-8 shadow-sm space-y-8 group hover:border-[#00685f]/30 transition-all duration-500 overflow-hidden relative">
            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00685f]/5 blur-2xl rounded-full" />
            <h3 className="text-xl sm:text-2xl font-black text-[#191c1e] tracking-tight">Activity Timeline</h3>
            <div className="space-y-8 relative">
@@ -162,12 +162,12 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
                    <div className={`absolute left-3 top-0 w-8 h-8 rounded-full ${t.color} flex items-center justify-center z-10 shadow-lg group-hover/timeline:scale-125 transition-transform border border-white`}>
                       <t.icon className="w-4 h-4 text-white" />
                    </div>
-                   <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                         <h4 className="text-[13px] font-black text-[#191c1e] tracking-tight">{t.title}</h4>
-                         <span className="text-[9px] font-black uppercase text-[#bcc9c6] tracking-[0.2em]">{t.time}</span>
+                   <div className="space-y-0.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                         <h4 className="text-[11px] font-black text-[#191c1e] tracking-tight truncate mr-2">{t.title}</h4>
+                         <span className="text-[8px] font-black uppercase text-[#bcc9c6] tracking-[0.15em] shrink-0">{t.time}</span>
                       </div>
-                      <p className="text-[11px] font-medium text-[#6d7a77] leading-relaxed">{t.desc}</p>
+                      <p className="text-[10px] font-medium text-[#6d7a77] leading-tight line-clamp-1">{t.desc}</p>
                    </div>
                 </div>
               ))}

@@ -190,16 +190,16 @@ export default function CreatorMyCourses({ user }: { user: AuthUser }) {
                 </div>
               </div>
 
-              <div className="p-8 flex flex-col flex-1 space-y-6 text-left">
-                <div className="space-y-4 pb-4 border-b border-[#bcc9c6]/10 h-28">
-                  <h3 className="text-xl font-black text-[#191c1e] leading-tight group-hover:text-[#00685f] transition-colors line-clamp-2 uppercase">{course.title}</h3>
-                  <div className="flex items-center gap-6">
-                     <div className="flex items-center gap-2 text-[#6d7a77] group-hover:text-[#191c1e] transition-colors text-[10px] font-black uppercase tracking-widest">
-                        <Users className="w-4 h-4" />
+              <div className="p-6 flex flex-col flex-1 space-y-6 text-left">
+                <div className="space-y-3 pb-4 border-b border-[#bcc9c6]/10 h-24">
+                  <h3 className="text-lg font-black text-[#191c1e] leading-tight group-hover:text-[#00685f] transition-colors line-clamp-2 uppercase">{course.title}</h3>
+                  <div className="flex items-center gap-4">
+                     <div className="flex items-center gap-1.5 text-[#6d7a77] group-hover:text-[#191c1e] transition-colors text-[9px] font-black uppercase tracking-widest">
+                        <Users className="w-3.5 h-3.5" />
                         <span>{learnerCount} <span className="opacity-60">LEARNERS</span></span>
                      </div>
-                     <div className="flex items-center gap-2 text-[#6d7a77] group-hover:text-[#191c1e] transition-colors text-[10px] font-black uppercase tracking-widest">
-                        <Layers className="w-4 h-4" />
+                     <div className="flex items-center gap-1.5 text-[#6d7a77] group-hover:text-[#191c1e] transition-colors text-[9px] font-black uppercase tracking-widest shrink-0">
+                        <Layers className="w-3.5 h-3.5" />
                         <span>{course.isoStandard}</span>
                      </div>
                   </div>

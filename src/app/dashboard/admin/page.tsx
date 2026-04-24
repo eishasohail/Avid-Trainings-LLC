@@ -133,15 +133,15 @@ export default function AdminPage() {
   return (
     <DashboardWrapper loadingMessage="Synchronizing Directory...">
       {(user) => (
-        <div className="space-y-12 pb-10">
+        <div className="space-y-8 pb-10">
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 animate-fade-in-up">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                  <ShieldCheck className="w-8 h-8 text-[#00685f]" />
                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#00685f]">User Management</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-[#191c1e] tracking-tighter">Admin Panel</h1>
-              <p className="text-base sm:text-lg font-medium text-[#6d7a77] max-w-xl">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#191c1e] tracking-tighter uppercase">Admin Panel</h1>
+              <p className="text-sm sm:text-base font-medium text-[#6d7a77] max-w-xl">
                  Platform-wide user oversight and Access Management for the Avid Trainings ecosystem.
               </p>
             </div>
@@ -161,10 +161,10 @@ export default function AdminPage() {
                { label: "Admins", value: stats.nodes, icon: Shield, accent: "bg-[#00685f]", trend: "Stable" },
              ].map((stat, i) => (
                 <div key={i} className="bg-white rounded-[40px] border border-[#bcc9c6]/40 p-1 shadow-sm transition-all hover:shadow-2xl hover:-translate-y-2 group">
-                   <div className="p-8 flex flex-col justify-between h-full space-y-10">
+                   <div className="p-6 flex flex-col justify-between h-full space-y-6">
                       <div className="flex items-center justify-between">
-                         <div className={`w-14 h-14 rounded-2xl ${stat.accent} flex items-center justify-center text-white shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
-                            <stat.icon className="w-7 h-7" />
+                         <div className={`w-12 h-12 rounded-2xl ${stat.accent} flex items-center justify-center text-white shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
+                            <stat.icon className="w-6 h-6" />
                          </div>
                          <div className="text-[10px] font-black text-[#00685f] bg-[#00685f]/5 px-3 py-1.5 rounded-full border border-[#00685f]/10">
                             {stat.trend}
@@ -181,95 +181,86 @@ export default function AdminPage() {
 
           {/* Management Interface */}
           <div className="bg-white rounded-[48px] border border-[#bcc9c6]/40 shadow-sm overflow-hidden animate-fade-in-up stagger-2">
-             <div className="p-8 sm:p-12 border-b border-[#bcc9c6]/20 flex flex-col xl:flex-row justify-between items-center gap-10 bg-[#fcfdfe]">
+             <div className="p-6 sm:p-8 border-b border-[#bcc9c6]/20 flex flex-col xl:flex-row justify-between items-center gap-6 bg-[#fcfdfe]">
                 <div className="relative w-full xl:max-w-xl group">
                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-[#6d7a77]/40 group-focus-within:text-[#00685f] transition-colors" />
                    <input 
                      type="text" 
-                     placeholder="Filter by name, email, or unique ID..." 
-                     className="w-full pl-16 pr-8 py-5 bg-white border border-[#bcc9c6]/40 rounded-[28px] text-base font-semibold outline-none focus:border-[#00685f] focus:ring-4 focus:ring-[#00685f]/5 transition-all shadow-inner"
+                     placeholder="Filter users..." 
+                     className="w-full pl-16 pr-8 py-4 bg-white border border-[#bcc9c6]/40 rounded-[28px] text-sm font-semibold outline-none focus:border-[#00685f] focus:ring-4 focus:ring-[#00685f]/5 transition-all shadow-inner"
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
                    />
-                   <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-2">
-                      <span className="px-2 py-1 bg-[#f7f9fb] border border-[#bcc9c6]/30 text-[9px] font-black text-[#6d7a77] rounded-lg">⌘</span>
-                      <span className="px-2 py-1 bg-[#f7f9fb] border border-[#bcc9c6]/30 text-[9px] font-black text-[#6d7a77] rounded-lg">F</span>
-                   </div>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row items-center gap-6 w-full xl:w-auto">
-                   <div className="flex p-1.5 bg-[#f0f4f4] rounded-[24px] w-full sm:w-fit overflow-x-auto scrollbar-hide no-scrollbar">
+                   <div className="flex p-1 bg-[#f0f4f4] rounded-[24px] w-full sm:w-fit overflow-x-auto no-scrollbar">
                       {["All", "Admin", "Creator", "Learner"].map(role => (
                          <button 
                            key={role} 
                            onClick={() => setRoleFilter(role)}
-                           className={`px-8 py-3.5 rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${roleFilter === role ? 'bg-white text-[#00685f] shadow-xl' : 'text-[#6d7a77] hover:bg-white/40'}`}
+                           className={`px-8 py-3 rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${roleFilter === role ? 'bg-white text-[#00685f] shadow-xl' : 'text-[#6d7a77] hover:bg-white/40'}`}
                          >
                             {role}
                          </button>
                       ))}
                    </div>
-                   <button className="hidden sm:flex p-4.5 bg-white border border-[#bcc9c6]/40 rounded-[24px] text-[#6d7a77] hover:text-[#00685f] hover:border-[#00685f] transition-all shadow-sm active:scale-95">
-                      <Filter className="w-6 h-6" />
-                   </button>
                 </div>
              </div>
 
-             <div className="w-full">
-                <table className="w-full text-left min-w-[870px]">
-                   <thead className="bg-[#fcfdfe] text-[10px] font-black uppercase tracking-[0.25em] text-[#6d7a77] border-b border-[#bcc9c6]/20 whitespace-nowrap">
+             <div className="w-full overflow-x-auto">
+                <table className="w-full text-left min-w-[900px]">
+                   <thead className="bg-[#fcfdfe] text-[9px] font-black uppercase tracking-[0.25em] text-[#6d7a77] border-b border-[#bcc9c6]/20 whitespace-nowrap">
                       <tr>
-                         <th className="px-8 py-8 font-black w-[25%] min-w-[250px]">User Details</th>
-                         <th className="px-8 py-8 font-black w-[15%] min-w-[150px]">Platform Role</th>
-                         <th className="px-8 py-8 font-black w-[15%] min-w-[150px]">Joined Date</th>
-                         <th className="px-8 py-8 font-black w-[15%] min-w-[120px]">Status</th>
-                         <th className="px-8 py-8 font-black w-[40%] min-w-[350px] text-right pr-8">
-                            ACTIONS
-                         </th>
+                         <th className="px-8 py-6 font-black w-[25%] min-w-[200px]">User Details</th>
+                         <th className="px-8 py-6 font-black w-[15%] min-w-[120px]">Platform Role</th>
+                         <th className="px-8 py-6 font-black w-[15%] min-w-[120px]">Joined Date</th>
+                         <th className="px-8 py-6 font-black w-[15%] min-w-[100px]">Status</th>
+                         <th className="px-8 py-6 font-black w-[40%] min-w-[280px] text-right pr-8">ACTIONS</th>
                       </tr>
                    </thead>
                    <tbody className="divide-y divide-[#bcc9c6]/10">
                       {isLoadingUsers ? (
                          [...Array(6)].map((_, i) => (
                             <tr key={i} className="animate-pulse">
-                               <td className="px-8 py-10"><div className="w-64 h-14 bg-[#f7f9fb] rounded-3xl" /></td>
-                               <td className="px-8 py-10"><div className="w-28 h-8 bg-[#f7f9fb] rounded-full" /></td>
-                               <td className="px-8 py-10"><div className="w-32 h-6 bg-[#f7f9fb] rounded-lg" /></td>
-                               <td className="px-8 py-10"><div className="w-20 h-6 bg-[#f7f9fb] rounded-lg" /></td>
-                               <td className="px-8 py-10 text-right pr-8"><div className="w-40 h-12 bg-[#f7f9fb] rounded-2xl ml-auto" /></td>
+                               <td className="px-8 py-6"><div className="w-64 h-10 bg-[#f7f9fb] rounded-3xl" /></td>
+                               <td className="px-8 py-6"><div className="w-28 h-8 bg-[#f7f9fb] rounded-full" /></td>
+                               <td className="px-8 py-6"><div className="w-32 h-6 bg-[#f7f9fb] rounded-lg" /></td>
+                               <td className="px-8 py-6"><div className="w-20 h-6 bg-[#f7f9fb] rounded-lg" /></td>
+                               <td className="px-8 py-6 text-right pr-8"><div className="w-40 h-10 bg-[#f7f9fb] rounded-2xl ml-auto" /></td>
                             </tr>
                          ))
                       ) : currentUsers.map((u, i) => (
                          <tr key={u.uid} className="hover:bg-[#fcfdfe] transition-all group/row">
-                            <td className="px-8 py-8 whitespace-nowrap">
-                               <div className="flex items-center gap-6">
-                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00685f] to-[#01a69a] flex items-center justify-center text-white text-xl font-black shadow-lg ring-4 ring-[#f7f9fb] group-hover/row:scale-110 transition-transform shrink-0">
+                            <td className="px-8 py-5 whitespace-nowrap">
+                               <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 rounded-xl bg-[#00685f] flex items-center justify-center text-white text-lg font-black shadow-lg shrink-0">
                                      {u.displayName.charAt(0)}
                                   </div>
-                                  <div className="space-y-1">
-                                     <p className="text-lg font-black text-[#191c1e] group-hover/row:text-[#00685f] transition-colors">{u.displayName}</p>
+                                  <div className="space-y-0.5">
+                                     <p className="text-base font-black text-[#191c1e] group-hover/row:text-[#00685f] transition-colors truncate max-w-[180px] uppercase tracking-tight">{u.displayName}</p>
                                      <div className="flex items-center gap-2 text-[#6d7a77]">
-                                        <Mail className="w-3.5 h-3.5" />
-                                        <p className="text-xs font-bold">{u.email}</p>
+                                        <Mail className="w-3.5 h-3.5 opacity-40" />
+                                        <p className="text-[11px] font-bold truncate max-w-[150px]">{u.email}</p>
                                      </div>
                                   </div>
                                </div>
                             </td>
-                            <td className="px-8 py-8 whitespace-nowrap">
+                            <td className="px-8 py-5 whitespace-nowrap">
                                <RoleBadge role={u.role} />
                             </td>
-                            <td className="px-8 py-8 whitespace-nowrap">
-                               <div className="flex items-center gap-2 text-sm font-black text-[#6d7a77]">
-                                  <Calendar className="w-4 h-4 opacity-40" />
+                            <td className="px-8 py-5 whitespace-nowrap">
+                               <div className="flex items-center gap-2 text-[11px] font-bold text-[#6d7a77]">
+                                  <Calendar className="w-3.5 h-3.5 opacity-40" />
                                   {new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                </div>
                             </td>
-                            <td className="px-8 py-8 whitespace-nowrap">
-                               <div className="flex items-center gap-2 text-[#00685f] text-[10px] font-black uppercase">
-                                  <Activity className="w-4 h-4 animate-pulse" /> Active
+                            <td className="px-8 py-5 whitespace-nowrap text-[9px] font-black uppercase text-[#00685f]">
+                               <div className="flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-[#00685f] animate-pulse" /> Active
                                </div>
                             </td>
-                            <td className="px-8 py-8 text-right pr-8 whitespace-nowrap">
+                            <td className="px-8 py-5 text-right pr-8 whitespace-nowrap">
                                 <div className="flex items-center justify-end gap-3 h-11">
                                    {updatingId === u.uid ? (
                                       <div className="flex items-center justify-center gap-3 px-6 h-full bg-[#f7f9fb] rounded-xl border border-[#bcc9c6]/20 shadow-inner">
@@ -277,8 +268,7 @@ export default function AdminPage() {
                                          <span className="text-[9px] font-black text-[#6d7a77] uppercase tracking-widest">Updating</span>
                                       </div>
                                    ) : u.role === 'admin' ? (
-                                      <div className="relative h-full px-6 flex items-center justify-center gap-2.5 text-[9px] font-black uppercase tracking-widest text-white bg-gradient-to-br from-[#131b2e] to-[#2d3b55] rounded-xl border border-white/10 shadow-lg cursor-default">
-                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                      <div className="relative h-full px-6 flex items-center justify-center gap-2.5 text-[9px] font-black uppercase tracking-widest text-white bg-[#131b2e] rounded-xl border border-white/10 shadow-lg cursor-default">
                                          <ShieldCheck className="w-3.5 h-3.5 opacity-80" /> Protected Access
                                       </div>
                                    ) : (
@@ -293,9 +283,8 @@ export default function AdminPage() {
                                          >
                                             {u.role === 'creator' ? 'Revoke' : 'Promote'}
                                          </button>
-                                         <button className="relative w-14 h-full flex items-center justify-center bg-white border border-[#bcc9c6]/40 rounded-2xl text-[#6d7a77] hover:text-[#191c1e] hover:border-[#00685f] hover:shadow-xl transition-all duration-300 group-hover/row:translate-x-0 translate-x-1 opacity-100 group-hover/row:opacity-100 active:scale-95 shrink-0">
-                                            <div className="absolute inset-0 bg-[#f7f9fb] opacity-0 hover:opacity-100 rounded-2xl transition-opacity" />
-                                            <MoreVertical className="relative z-10 w-5 h-5" />
+                                         <button className="relative w-12 h-full flex items-center justify-center bg-white border border-[#bcc9c6]/40 rounded-xl text-[#6d7a77] hover:text-[#191c1e] hover:border-[#00685f] transition-all shrink-0 active:scale-95">
+                                            <MoreVertical className="w-5 h-5" />
                                          </button>
                                       </div>
                                    )}
@@ -309,7 +298,7 @@ export default function AdminPage() {
 
              {/* Pagination High-Fidelity */}
              {!isLoadingUsers && filteredUsers.length > usersPerPage && (
-                <div className="p-12 border-t border-[#bcc9c6]/20 bg-[#fcfdfe] flex flex-col sm:flex-row items-center justify-between gap-8">
+                <div className="p-8 sm:p-12 border-t border-[#bcc9c6]/20 bg-[#fcfdfe] flex flex-col sm:flex-row items-center justify-between gap-8">
                    <div className="flex items-center gap-4">
                       <div className="flex -space-x-2">
                          {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-[#bcc9c6] flex items-center justify-center text-[10px] font-black text-white">{i}</div>)}
@@ -358,7 +347,7 @@ export default function AdminPage() {
                      {confirmModal.actionType === 'danger' ? <ShieldAlert className="w-14 h-14" /> : <Fingerprint className="w-14 h-14" />}
                   </div>
                   <div className="space-y-4">
-                     <h3 className="text-4xl font-black text-[#191c1e] tracking-tighter leading-tight">{confirmModal.title}</h3>
+                     <h3 className="text-4xl font-black text-[#191c1e] tracking-tighter leading-tight uppercase">{confirmModal.title}</h3>
                      <p className="text-base sm:text-lg font-medium text-[#6d7a77] leading-relaxed max-w-[320px] mx-auto">{confirmModal.description}</p>
                   </div>
                   <div className="flex flex-col gap-4">

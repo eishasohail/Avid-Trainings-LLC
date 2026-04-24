@@ -53,7 +53,7 @@ export default function PublicationsPage() {
   return (
     <DashboardWrapper loadingMessage="Opening Archives...">
       {(user) => (
-        <div className="space-y-10">
+        <div className="space-y-8">
           
           <AnimatePresence>
             {toast && (
@@ -103,12 +103,12 @@ export default function PublicationsPage() {
                      placeholder="Search publications..." 
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     className="w-full pl-14 pr-8 py-5 bg-white border border-[#bcc9c6]/40 rounded-[24px] text-sm outline-none focus:border-[#00685f] transition-all font-bold shadow-sm" 
+                     className="w-full pl-14 pr-8 py-4 bg-white border border-[#bcc9c6]/40 rounded-[20px] text-sm outline-none focus:border-[#00685f] transition-all font-bold shadow-sm" 
                    />
                 </div>
                 <div className="flex p-1 bg-white border border-[#bcc9c6]/40 rounded-2xl shadow-sm w-full sm:w-auto justify-center ml-auto">
-                   <button onClick={() => setViewMode("card")} className={`p-2.5 flex-1 sm:flex-none rounded-xl transition-all ${viewMode === 'card' ? 'bg-[#00685f] text-white' : 'text-[#6d7a77] hover:bg-[#f7f9fb]'}`}><LayoutGrid className="w-5 h-5" /></button>
-                   <button onClick={() => setViewMode("table")} className={`p-2.5 flex-1 sm:flex-none rounded-xl transition-all ${viewMode === 'table' ? 'bg-[#00685f] text-white' : 'text-[#6d7a77] hover:bg-[#f7f9fb]'}`}><List className="w-5 h-5" /></button>
+                   <button onClick={() => setViewMode("card")} className={`p-2 flex-1 sm:flex-none rounded-xl transition-all ${viewMode === 'card' ? 'bg-[#00685f] text-white' : 'text-[#6d7a77] hover:bg-[#f7f9fb]'}`}><LayoutGrid className="w-4 h-4" /></button>
+                   <button onClick={() => setViewMode("table")} className={`p-2 flex-1 sm:flex-none rounded-xl transition-all ${viewMode === 'table' ? 'bg-[#00685f] text-white' : 'text-[#6d7a77] hover:bg-[#f7f9fb]'}`}><List className="w-4 h-4" /></button>
                 </div>
              </div>
           </div>
@@ -123,62 +123,62 @@ export default function PublicationsPage() {
                    <h3 className="text-xl font-black text-[#191c1e] uppercase">No Publications Found</h3>
                    <p className="text-sm font-medium text-[#6d7a77]">No courses found matching your criteria.</p>
                 </div>
-             ) : viewMode === 'card' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              ) : viewMode === 'card' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                    {filtered.map((p) => (
                       <div 
                         key={p.id} 
-                        onClick={() => router.push(`/dashboard/courses/${p.id}`)}
+                        onClick={() => router.push(`/dashboard/my-courses/${p.id}`)}
                         className="group flex flex-col bg-white rounded-[40px] border border-[#bcc9c6]/40 p-1 relative overflow-hidden shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all duration-700 cursor-pointer"
                       >
                          <div className="aspect-video bg-gradient-to-br from-[#00685f] to-[#131b2e] rounded-[38px] relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-700">
                             <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                            <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md rounded-full border text-[9px] font-black uppercase tracking-widest ${
+                            <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md rounded-full border text-[8px] font-black uppercase tracking-widest ${
                               p.status === 'published' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/20 border-amber-500/30 text-amber-400'
                             }`}>
                                {p.status}
                             </div>
                          </div>
-                         <div className="p-7 space-y-6 flex-1 flex flex-col justify-between">
-                            <div className="space-y-4">
-                               <h3 className="text-lg font-black text-[#191c1e] line-clamp-2 min-h-[56px] group-hover:text-[#00685f] transition-colors uppercase leading-tight">{p.title}</h3>
-                               <div className="flex items-center justify-between text-[10px] font-black uppercase text-[#bcc9c6] tracking-widest">
+                         <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                            <div className="space-y-3">
+                               <h3 className="text-base font-black text-[#191c1e] line-clamp-2 min-h-[44px] group-hover:text-[#00685f] transition-colors uppercase leading-tight tracking-tight">{p.title}</h3>
+                               <div className="flex items-center justify-between text-[9px] font-black uppercase text-[#bcc9c6] tracking-widest">
                                   <span>Modified</span><span>{p.updatedAt}</span>
                                </div>
-                               <div className="flex items-center justify-between pt-2">
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-[#6d7a77]">{getLearnerCountForCourse(p.id)} Learners</span>
+                               <div className="flex items-center justify-between pt-1">
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-[#6d7a77]">{getLearnerCountForCourse(p.id)} Learners</span>
                                </div>
                             </div>
                          </div>
                       </div>
                    ))}
                 </div>
-             ) : (
+              ) : (
                 <div className="bg-white rounded-[40px] border border-[#bcc9c6]/40 shadow-sm relative overflow-x-auto custom-scrollbar">
-                   <table className="w-full min-w-[1050px]">
+                   <table className="w-full min-w-[900px]">
                       <thead className="bg-[#fcfdfe] border-b border-[#bcc9c6]/20 whitespace-nowrap">
-                         <tr className="text-left font-black text-[10px] uppercase tracking-widest text-[#6d7a77]">
-                            <th className="px-10 py-6">Course</th>
-                            <th className="px-10 py-6">Status</th>
-                            <th className="px-10 py-6">Learners</th>
-                            <th className="px-10 py-6 text-right">Actions</th>
+                         <tr className="text-left font-black text-[9px] uppercase tracking-widest text-[#6d7a77]">
+                            <th className="px-8 py-5">Course</th>
+                            <th className="px-8 py-5">Status</th>
+                            <th className="px-8 py-5">Learners</th>
+                            <th className="px-8 py-5 text-right">Actions</th>
                          </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#bcc9c6]/10 font-bold text-sm">
+                      <tbody className="divide-y divide-[#bcc9c6]/10 font-bold text-[13px]">
                          {filtered.map((p) => (
                             <tr key={p.id} className="hover:bg-[#f7f9fb] transition-all group/row whitespace-nowrap">
-                               <td className="px-10 py-7 text-[#191c1e] text-base font-black truncate max-w-[300px] uppercase">{p.title}</td>
-                               <td className="px-10 py-7">
-                                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${p.status === 'published' ? 'bg-[#00685f]/5 text-[#00685f] border-[#00685f]/10' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{p.status}</span>
+                               <td className="px-8 py-5 text-[#191c1e] text-sm font-black truncate max-w-[280px] uppercase tracking-tight">{p.title}</td>
+                               <td className="px-8 py-5">
+                                  <span className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${p.status === 'published' ? 'bg-[#00685f]/5 text-[#00685f] border-[#00685f]/10' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{p.status}</span>
                                </td>
-                               <td className="px-10 py-7 text-[#6d7a77] uppercase tracking-widest text-xs">{getLearnerCountForCourse(p.id).toLocaleString()} <span className="text-[10px] text-[#bcc9c6]">Learners</span></td>
-                               <td className="px-10 py-7 text-right">
+                               <td className="px-8 py-5 text-[#6d7a77] uppercase tracking-widest text-[10px]">{getLearnerCountForCourse(p.id).toLocaleString()} <span className="text-[9px] text-[#bcc9c6]">Learners</span></td>
+                               <td className="px-8 py-5 text-right">
                                   <div className="flex items-center justify-end gap-2">
                                      <button 
                                        onClick={() => router.push(`/dashboard/my-courses/${p.id}`)}
-                                       className="p-3 text-[#6d7a77] hover:text-[#00685f] hover:bg-white hover:shadow-lg rounded-2xl transition-all flex items-center gap-2"
+                                       className="w-10 h-10 flex items-center justify-center text-[#6d7a77] hover:text-[#00685f] hover:bg-white hover:shadow-lg rounded-xl transition-all"
                                      >
-                                        <Edit3 className="w-5 h-5" />
+                                        <Edit3 className="w-4 h-4" />
                                      </button>
                                   </div>
                                </td>

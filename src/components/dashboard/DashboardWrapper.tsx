@@ -62,7 +62,7 @@ export default function DashboardWrapper({ children, loadingMessage = "Securing 
       <Navbar user={{...user, role: normalizedRole}} setIsSidebarOpen={setIsSidebarOpen} />
 
       <main className="pt-20 pb-20 min-h-screen md:ml-64 flex flex-col min-w-0">
-        <div className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 py-8 min-w-0">
+        <div className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 min-w-0">
           {children(user)}
         </div>
       </main>

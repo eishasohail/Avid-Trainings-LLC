@@ -49,7 +49,7 @@ export default function AnalyticsPage() {
   return (
     <DashboardWrapper loadingMessage="Generating Insights...">
       {(user) => (
-        <div className="space-y-10 sm:space-y-12">
+        <div className="space-y-8 sm:space-y-10">
           
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 animate-fade-in-up">
             <div className="space-y-3">
@@ -84,7 +84,7 @@ export default function AnalyticsPage() {
 
             {/* Charts Area */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 stagger-2">
-               <section className="lg:col-span-2 bg-white rounded-[40px] border border-[#bcc9c6]/40 p-8 sm:p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500">
+               <section className="lg:col-span-2 bg-white rounded-[40px] border border-[#bcc9c6]/40 p-6 sm:p-8 shadow-sm space-y-8 group hover:border-[#00685f]/30 transition-all duration-500">
                   <div className="flex flex-col sm:flex-row items-center justify-between border-b border-[#bcc9c6]/10 pb-8 gap-6">
                      <h3 className="text-xl sm:text-2xl font-black text-[#191c1e] tracking-tight flex items-center gap-4 uppercase">
                         <Activity className="w-7 h-7 text-[#00685f]" /> Enrollment Trend
@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
                   </div>
                </section>
 
-               <section className="bg-white rounded-[40px] border border-[#bcc9c6]/40 p-8 sm:p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500">
+               <section className="bg-white rounded-[40px] border border-[#bcc9c6]/40 p-6 sm:p-8 shadow-sm space-y-8 group hover:border-[#00685f]/30 transition-all duration-500">
                   <h3 className="text-xl sm:text-2xl font-black text-[#191c1e] tracking-tight text-center sm:text-left uppercase">Status Distribution</h3>
                   <div className="flex flex-col items-center py-6 gap-10">
                      <div className="relative w-48 h-48 sm:w-56 sm:h-56 group-hover:scale-105 transition-transform duration-1000">
@@ -176,13 +176,13 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 stagger-3 pb-10">
-               <section className="bg-white rounded-[40px] border border-[#bcc9c6]/40 p-8 sm:p-10 shadow-sm space-y-8 group hover:border-[#00685f]/30 transition-all duration-500">
+               <section className="bg-white rounded-[40px] border border-[#bcc9c6]/40 p-6 sm:p-8 shadow-sm space-y-8 group hover:border-[#00685f]/30 transition-all duration-500">
                   <div className="flex justify-between items-center border-b border-[#bcc9c6]/10 pb-8">
                      <h3 className="text-xl sm:text-2xl font-black text-[#191c1e] tracking-tight uppercase">Top Courses</h3>
                   </div>
                   <div className="space-y-4">
                      {topCourses.map((course, i) => (
-                        <div key={course.id} onClick={() => router.push(`/dashboard/courses/${course.id}`)} className="group/row flex items-center justify-between p-5 rounded-[28px] hover:bg-[#f7f9fb] transition-all duration-500 cursor-pointer border border-transparent hover:border-[#bcc9c6]/30">
+                        <div key={course.id} onClick={() => router.push(`/dashboard/my-courses/${course.id}`)} className="group/row flex items-center justify-between p-5 rounded-[28px] hover:bg-[#f7f9fb] transition-all duration-500 cursor-pointer border border-transparent hover:border-[#bcc9c6]/30">
                            <div className="flex items-center gap-8">
                               <span className="text-3xl font-black text-[#bcc9c6] min-w-[40px] group-hover/row:text-[#00685f] transition-all group-hover/row:translate-x-1">{i + 1}</span>
                               <div>
@@ -198,7 +198,7 @@ export default function AnalyticsPage() {
                   </div>
                </section>
 
-               <section className="bg-white rounded-[40px] border border-[#bcc9c6]/40 p-8 sm:p-10 shadow-sm space-y-8 group hover:border-[#00685f]/30 transition-all duration-500">
+               <section className="bg-white rounded-[40px] border border-[#bcc9c6]/40 p-6 sm:p-8 shadow-sm space-y-8 group hover:border-[#00685f]/30 transition-all duration-500">
                   <div className="flex justify-between items-center border-b border-[#bcc9c6]/10 pb-8">
                      <h3 className="text-xl sm:text-2xl font-black text-[#191c1e] tracking-tight uppercase">Recent Activity</h3>
                   </div>

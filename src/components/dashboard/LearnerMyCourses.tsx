@@ -150,14 +150,14 @@ export default function LearnerMyCourses({ user }: { user: AuthUser }) {
                 )}
               </div>
 
-              <div className="p-8 flex flex-col flex-1 space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-xl font-black text-[#191c1e] leading-tight group-hover:text-[#00685f] transition-colors line-clamp-2 min-h-[56px]">{course.title}</h3>
+              <div className="p-6 flex flex-col flex-1 space-y-6">
+                <div className="space-y-3">
+                  <h3 className="text-lg font-black text-[#191c1e] leading-tight group-hover:text-[#00685f] transition-colors line-clamp-2 min-h-[48px] uppercase">{course.title}</h3>
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-[#f7f9fb] flex items-center justify-center overflow-hidden border border-[#bcc9c6]/20">
-                       <span className="text-[10px] font-black text-[#00685f]">{course.creatorName?.charAt(0)}</span>
+                    <div className="w-6 h-6 rounded-lg bg-[#f7f9fb] flex items-center justify-center overflow-hidden border border-[#bcc9c6]/20">
+                       <span className="text-[9px] font-black text-[#00685f]">{course.creatorName?.charAt(0)}</span>
                     </div>
-                    <span className="text-xs font-bold text-[#6d7a77]">{course.creatorName}</span>
+                    <span className="text-[11px] font-bold text-[#6d7a77]">{course.creatorName}</span>
                   </div>
                 </div>
 
@@ -174,13 +174,13 @@ export default function LearnerMyCourses({ user }: { user: AuthUser }) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6 pt-2 text-[10px] font-black uppercase tracking-widest text-[#bcc9c6]">
+                <div className="flex items-center gap-4 pt-1 text-[9px] font-black uppercase tracking-widest text-[#bcc9c6]">
                   <div className="flex items-center gap-1.5 group-hover:text-[#6d7a77] transition-colors">
-                    <BookOpen className="w-4 h-4" />
+                    <BookOpen className="w-3.5 h-3.5" />
                     <span>{course.totalCount} Lectures</span>
                   </div>
                   <div className="flex items-center gap-1.5 group-hover:text-[#6d7a77] transition-colors">
-                    <Clock className="w-4 h-4" />
+                    <Clock className="w-3.5 h-3.5" />
                     <span>{course.timeRemaining}</span>
                   </div>
                 </div>
