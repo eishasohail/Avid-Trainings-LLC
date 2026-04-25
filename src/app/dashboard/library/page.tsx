@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Search, Filter, Layers, BookOpen, Users, CheckCircle2, ShieldCheck } from "lucide-react";
 import DashboardWrapper from "@/components/dashboard/DashboardWrapper";
 import { getAllCourses } from '@/lib/utils/courseUtils';
@@ -9,6 +9,8 @@ import { getLearnerCountForCourse } from '@/lib/data/dummyData';
 
 export default function CourseLibraryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams.get('search');
 
   const [enrollments, setEnrollments] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -19,6 +21,12 @@ export default function CourseLibraryPage() {
   useEffect(() => {
     setEnrollments(JSON.parse(localStorage.getItem('enrollments') || '[]'));
   }, []);
+
+  useEffect(() => {
+    if (urlSearch) {
+      setSearch(urlSearch);
+    }
+  }, [urlSearch]);
 
   const allCourses = useMemo(() => getAllCourses(), []);
   

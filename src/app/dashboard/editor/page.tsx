@@ -60,7 +60,7 @@ export default function EditorPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    isoStandard: 'ISO 27001',
+    isoStandard: '',
     category: 'Intermediate',
     status: 'draft' as CourseStatus
   });
@@ -167,7 +167,7 @@ export default function EditorPage() {
     setCourses(updatedCourses);
     setIsModalOpen(false);
     setEditingCourse(null);
-    setFormData({ title: '', description: '', isoStandard: 'ISO 27001', category: 'Intermediate', status: 'draft' });
+    setFormData({ title: '', description: '', isoStandard: '', category: 'Intermediate', status: 'draft' });
   };
 
   const handleDeleteCourse = (courseId: string) => {
@@ -355,7 +355,7 @@ export default function EditorPage() {
              <div 
                onClick={() => {
                  setEditingCourse(null);
-                 setFormData({ title: '', description: '', isoStandard: 'ISO 27001', category: 'Intermediate', status: 'draft' });
+                 setFormData({ title: '', description: '', isoStandard: '', category: 'Intermediate', status: 'draft' });
                  setIsModalOpen(true);
                }}
                className="group bg-[#f7f9fb] border-3 border-dashed border-[#bcc9c6]/40 rounded-[56px] flex flex-col items-center justify-center p-16 min-h-[640px] animate-fade-in-up hover:border-[#00685f]/40 hover:bg-white hover:shadow-2xl transition-all duration-700 cursor-pointer text-center"
@@ -423,6 +423,7 @@ export default function EditorPage() {
                                  value={formData.isoStandard}
                                  onChange={(e) => setFormData({...formData, isoStandard: e.target.value})}
                               >
+                                 <option value="">-- Select Standard (Optional) --</option>
                                  {['ISO 27001', 'ISO 9001', 'ISO 45001', 'ISO 14001', 'ISO 50001'].map(std => (
                                     <option key={std} value={std}>{std}</option>
                                  ))}

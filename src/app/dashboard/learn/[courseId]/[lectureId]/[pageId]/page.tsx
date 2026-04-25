@@ -38,6 +38,8 @@ export default function LectureViewerPage() {
 
   const [user, loadingAuth] = useAuthState(auth)
   
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  
   const [course, setCourse] = useState<any>(null)
   const [pages, setPages] = useState<any[]>([])
   const [activePage, setActivePage] = useState<any>(null)
@@ -219,35 +221,40 @@ export default function LectureViewerPage() {
     <div className="min-h-screen bg-[#f7f9fb] flex flex-col h-screen overflow-hidden">
       
       {/* Top Bar */}
-      <header className="h-16 bg-white border-b border-slate-200 shrink-0 z-50 flex items-center justify-between px-6">
-        <div className="flex items-center gap-6">
+      <header className="h-16 bg-white border-b border-slate-200 shrink-0 z-[60] flex items-center justify-between px-4 sm:px-6">
+        <div className="flex items-center gap-3 sm:gap-6">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="lg:hidden w-9 h-9 rounded-xl hover:bg-slate-50 flex items-center justify-center transition-colors border border-slate-100"
+          >
+             <Menu size={18} className="text-slate-600" />
+          </button>
           <button 
             onClick={() => router.push(`/dashboard/learn/${courseId}`)}
-            className="w-10 h-10 rounded-xl hover:bg-slate-50 flex items-center justify-center transition-colors border border-slate-100"
+            className="hidden sm:flex w-9 h-9 rounded-xl hover:bg-slate-50 items-center justify-center transition-colors border border-slate-100"
           >
-            <X size={20} className="text-slate-400" />
+            <X size={18} className="text-slate-400" />
           </button>
           <div className="flex flex-col">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-              <span className="truncate max-w-[120px]">{course.title}</span>
+            <div className="flex items-center gap-2 text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <span className="truncate max-w-[80px] sm:max-w-[120px]">{course.title}</span>
               <ChevronRight size={10} />
-              <span className="truncate max-w-[120px]">{currentSection?.title}</span>
+              <span className="truncate max-w-[80px] sm:max-w-[120px]">{currentSection?.title}</span>
             </div>
-            <h2 className="text-xs font-black text-[#131b2e] uppercase tracking-tight">
+            <h2 className="text-[10px] sm:text-xs font-black text-[#131b2e] uppercase tracking-tight truncate max-w-[150px] sm:max-w-none">
                {activeLectureInfo?.title}
             </h2>
           </div>
         </div>
 
-        <div className="hidden md:block">
-          <p className="text-sm font-black text-[#131b2e] uppercase tracking-tighter line-clamp-1 max-w-md">
+        <div className="hidden lg:block">
+          <p className="text-[11px] font-black text-[#131b2e] uppercase tracking-tighter line-clamp-1 max-w-md">
             {activePage.title}
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Bell size={20} className="text-slate-300" />
-          <div className="w-9 h-9 rounded-xl bg-[#131b2e] flex items-center justify-center text-white font-black text-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#131b2e] flex items-center justify-center text-white font-black text-xs sm:text-sm">
             {user?.displayName?.[0].toUpperCase() || user?.email?.[0].toUpperCase() || 'U'}
           </div>
         </div>
@@ -255,12 +262,35 @@ export default function LectureViewerPage() {
 
       <div className="flex flex-1 overflow-hidden relative">
         
+        {/* Mobile Sidebar Backdrop */}
+        <AnimatePresence>
+          {isSidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-[#131b2e]/60 backdrop-blur-md z-[70] lg:hidden"
+            />
+          )}
+        </AnimatePresence>
+
         {/* Navigation Sidebar */}
-        <aside className="w-72 bg-white border-r border-slate-200 fixed left-0 h-full overflow-y-auto z-40 custom-scrollbar">
-          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+        <aside className={`
+          fixed left-0 top-0 lg:top-16 h-full lg:h-[calc(100vh-64px)] w-72 bg-white border-r border-slate-200 
+          z-[80] lg:z-40 transition-transform duration-500 overflow-y-auto custom-scrollbar flex flex-col
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
+          <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between lg:block">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00685f]">
-              Course Modules
+              Course Syllabus
             </h3>
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="lg:hidden p-2 text-slate-400 hover:text-slate-600"
+            >
+              <X size={20} />
+            </button>
           </div>
 
           <div className="p-4 space-y-4 pb-32">
@@ -300,6 +330,7 @@ export default function LectureViewerPage() {
                             <div 
                               key={lec.id}
                               onClick={() => {
+                                setIsSidebarOpen(false)
                                 // Navigate to lecture's first page
                                 const ls = localStorage.getItem(`avid-pages-${lec.id}`)
                                 const lp = ls ? JSON.parse(ls) : []
@@ -348,7 +379,7 @@ export default function LectureViewerPage() {
         </aside>
 
         {/* Content Area */}
-        <main className="ml-72 flex-1 h-full overflow-y-auto p-12 custom-scrollbar pb-32">
+        <main className="flex-1 lg:ml-72 h-full overflow-y-auto p-4 sm:p-8 md:p-12 custom-scrollbar pb-32 w-full">
           <div className="max-w-4xl mx-auto">
             <motion.div 
               key={activePage.id}
@@ -388,12 +419,12 @@ export default function LectureViewerPage() {
       </div>
 
       {/* Bottom Bar */}
-      <footer className="h-20 bg-white border-t border-slate-200 fixed bottom-0 w-full z-50 px-8 flex items-center justify-between shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
+      <footer className="h-20 sm:h-20 bg-white border-t border-slate-200 fixed bottom-0 w-full z-50 px-4 sm:px-8 flex items-center justify-between shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
         
         {/* Left: Module Progress */}
-        <div className="flex flex-col gap-2 min-w-[200px]">
+        <div className="hidden sm:flex flex-col gap-2 min-w-[140px] md:min-w-[200px]">
           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-[#00685f]">
-            <span>Module Progress</span>
+            <span>Progress</span>
             <span>{sectionProgress}%</span>
           </div>
           <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -402,37 +433,37 @@ export default function LectureViewerPage() {
         </div>
 
         {/* Center: Navigation Controls */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6 flex-1 sm:flex-none justify-center">
           <button 
             disabled={isFirstPage && currentLectureIdx === 0}
             onClick={goPrevPage}
-            className="flex items-center gap-2 px-4 py-2 border border-[#bcc9c6] rounded-xl text-xs font-black uppercase tracking-widest text-[#131b2e] hover:border-[#00685f] transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white"
+            className="flex items-center justify-center w-10 h-10 sm:w-auto sm:px-4 sm:py-2 border border-[#bcc9c6] rounded-xl text-xs font-black uppercase tracking-widest text-[#131b2e] hover:border-[#00685f] transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white"
           >
-            <ChevronLeft size={16} /> Previous
+            <ChevronLeft size={16} /> <span className="hidden sm:inline ml-2">Previous</span>
           </button>
 
-          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-            Page {currentPageIdx + 1} of {pages.length}
+          <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+            {currentPageIdx + 1} / {pages.length}
           </span>
 
           <button 
             disabled={isLastPage}
             onClick={goNextPage}
-            className={`flex items-center gap-2 px-4 py-2 border border-[#bcc9c6] rounded-xl text-xs font-black uppercase tracking-widest text-[#131b2e] hover:border-[#00685f] transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white ${isLastPage ? 'hidden' : 'flex'}`}
+            className={`flex items-center justify-center w-10 h-10 sm:w-auto sm:px-4 sm:py-2 border border-[#bcc9c6] rounded-xl text-xs font-black uppercase tracking-widest text-[#131b2e] hover:border-[#00685f] transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white ${isLastPage ? 'hidden' : 'flex'}`}
           >
-            Next <ChevronRight size={16} />
+            <span className="hidden sm:inline mr-2">Next</span> <ChevronRight size={16} />
           </button>
         </div>
 
         {/* Right: Mark Complete */}
-        <div className="min-w-[200px] flex justify-end">
+        <div className="min-w-0 sm:min-w-[140px] md:min-w-[200px] flex justify-end">
           {isLastPage && (
             <button 
               onClick={markComplete}
-              className="bg-[#00685f] hover:bg-[#131b2e] text-white px-8 py-3 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] flex items-center gap-3 transition-all transform hover:scale-[1.02] shadow-teal"
+              className="bg-[#00685f] hover:bg-[#131b2e] text-white px-4 sm:px-8 py-3 rounded-xl font-black uppercase tracking-[0.2em] text-[9px] sm:text-[10px] flex items-center gap-2 sm:gap-3 transition-all transform hover:scale-[1.02] shadow-teal whitespace-nowrap"
             >
               <CheckCircle2 size={16} />
-              {currentLectureIdx === flatLectures.length - 1 ? "Finish Course" : "Mark Complete"}
+              <span className="hidden xs:inline">{currentLectureIdx === flatLectures.length - 1 ? "Finish" : "Complete"}</span>
             </button>
           )}
         </div>

@@ -60,18 +60,10 @@ export default function CreatorDashboard({ user }: { user: AuthUser }) {
            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#191c1e] tracking-tighter">Welcome back, {firstName}</h1>
            <p className="text-sm sm:text-base font-medium text-[#6d7a77]">Here's your platform overview.</p>
         </div>
-        <div className="relative w-full md:w-80 group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-[#bcc9c6] group-focus-within:text-[#00685f] transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Search courses..." 
-            className="w-full pl-14 pr-6 py-4 bg-white border border-[#bcc9c6]/40 rounded-2xl text-sm font-semibold outline-none focus:border-[#00685f] transition-all shadow-sm"
-          />
-        </div>
       </header>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full animate-fade-in-up stagger-1">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in-up stagger-1">
         {stats.map((stat, i) => (
           <div key={i} className="group bg-white rounded-[40px] border border-[#bcc9c6]/40 p-1 relative min-w-0 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 hover:-translate-y-2">
             <div className="p-6 flex flex-col justify-between h-full space-y-6">

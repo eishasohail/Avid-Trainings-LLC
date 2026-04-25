@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Menu, Search, X, Check, ArrowRight, Settings, User, Sparkles } from "lucide-react";
 import type { AuthUser } from "@/lib/types/auth";
 import { fetchUserNotifications, markAsRead, type Notification } from "@/lib/services/notificationService";
@@ -12,9 +13,11 @@ export default function Navbar({
   user: AuthUser;
   setIsSidebarOpen: (o: boolean) => void;
 }) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const initial = user.displayName ? user.displayName.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : "U");
@@ -45,6 +48,13 @@ export default function Navbar({
     };
   }, [user]);
 
+  const handleSearch = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      router.push(`/dashboard/library?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const handleMarkRead = async (id: string) => {
@@ -64,6 +74,7 @@ export default function Navbar({
         <button
           onClick={() => setIsSidebarOpen(true)}
           className="md:hidden text-[#191c1e] p-2.5 -ml-2 rounded-xl hover:bg-black/5 transition-all active:scale-95"
+          aria-label="Open Menu"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -74,6 +85,9 @@ export default function Navbar({
              <Search className="ml-5 w-5 h-5 text-[#6d7a77] group-focus-within:text-[#00685f] group-focus-within:scale-110 transition-all duration-300" />
              <input
                type="text"
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value)}
+               onKeyDown={handleSearch}
                placeholder="Search courses, modules, or standards..."
                className="w-full pl-4 pr-16 py-4 text-sm bg-transparent outline-none placeholder:text-[#6d7a77]/60 font-semibold text-[#191c1e]"
              />

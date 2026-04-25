@@ -115,7 +115,7 @@ export default function LearnerDashboard({ user }: { user: AuthUser }) {
       </header>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up stagger-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in-up stagger-1">
         {stats.map((stat, i) => (
           <div key={i} className="group bg-white rounded-[32px] border border-[#bcc9c6]/40 p-1 relative overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 hover:-translate-y-2">
             <div className="p-7 flex flex-col justify-between h-full space-y-6">
@@ -133,7 +133,7 @@ export default function LearnerDashboard({ user }: { user: AuthUser }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in-up stagger-2">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-fade-in-up stagger-2">
         {/* Continue Learning */}
         <section className="lg:col-span-2 bg-white rounded-[44px] border border-[#bcc9c6]/40 p-8 sm:p-10 shadow-sm space-y-10 group hover:border-[#00685f]/30 transition-all duration-500">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#bcc9c6]/10 pb-8 gap-4">

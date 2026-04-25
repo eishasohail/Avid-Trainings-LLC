@@ -18,7 +18,8 @@ import {
   Layout as LayoutIcon,
   Play,
   LogOut,
-  Award
+  Award,
+  X
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { getAllCourses } from "@/lib/utils/courseUtils"
@@ -28,6 +29,8 @@ export default function CourseViewerPage() {
   const router = useRouter()
   const { courseId } = useParams() as { courseId: string }
   const [user, loadingAuth] = useAuthState(auth)
+  
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
   const [course, setCourse] = useState<any>(null)
   const [completedLectures, setCompletedLectures] = useState<string[]>([])
@@ -43,10 +46,10 @@ export default function CourseViewerPage() {
     localStorage.setItem('avid-enrolled-courses', 
       JSON.stringify(updated))
     
-    // Remove progress data
+    // Progress data
     localStorage.removeItem(`avid-progress-${courseId}`)
     
-    // Remove last position
+    // Last position
     localStorage.removeItem(`avid-last-position-${courseId}`)
     
     // Navigate back to course landing page
@@ -102,10 +105,10 @@ export default function CourseViewerPage() {
       <div className="min-h-screen bg-[#f7f9fb] flex flex-col items-center justify-center gap-4">
         <h1 className="text-2xl font-black text-[#131b2e]">Course not found</h1>
         <button 
-          onClick={() => router.push('/dashboard/my-courses')}
+          onClick={() => router.push('/dashboard/library')}
           className="flex items-center gap-2 text-[#00685f] font-bold"
         >
-          <ChevronLeft size={20} /> Back to My Courses
+          <ChevronLeft size={20} /> Back to Library
         </button>
       </div>
     )
@@ -129,6 +132,7 @@ export default function CourseViewerPage() {
 
   const navigateToLecture = (lectureId: string) => {
     if (typeof window === 'undefined') return
+    setIsSidebarOpen(false)
     const pagesStr = localStorage.getItem(`avid-pages-${lectureId}`)
     if (pagesStr) {
       try {
@@ -141,17 +145,24 @@ export default function CourseViewerPage() {
         console.error("Error parsing pages", e)
       }
     }
-    // Fallback
     router.push(`/dashboard/learn/${courseId}/${lectureId}/page-1`)
   }
 
   return (
     <div className="min-h-screen bg-[#f7f9fb] flex flex-col">
       {/* Topbar */}
-      <header className="h-20 border-b border-slate-200 bg-white fixed top-0 w-full z-50 px-8 flex items-center justify-between">
-        <Logo size="sm" destination="/" />
+      <header className="h-20 border-b border-slate-200 bg-white fixed top-0 w-full z-[70] px-6 sm:px-8 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="lg:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-xl"
+          >
+            <Play className="w-5 h-5 rotate-180" fill="currentColor" />
+          </button>
+          <Logo size="sm" destination="/" />
+        </div>
 
-        <div className="hidden md:block max-w-md w-full mx-10">
+        <div className="hidden lg:block max-w-md w-full mx-10">
           <div className="text-center">
             <h1 className="text-sm font-black text-[#131b2e] uppercase truncate tracking-tight px-4">
               {course.title}
@@ -160,10 +171,10 @@ export default function CourseViewerPage() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="p-2 text-slate-400 hover:text-[#00685f] transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-[#00685f] rounded-full border-2 border-white"></span>
-          </button>
+          <div className="hidden sm:flex flex-col items-end mr-2">
+             <span className="text-[10px] font-black uppercase tracking-widest text-[#00685f]">Learning Mode</span>
+             <span className="text-[9px] font-bold text-slate-400">Avid Trainings Hub</span>
+          </div>
           <div className="w-10 h-10 rounded-2xl bg-[#131b2e] flex items-center justify-center text-white font-black text-sm border-2 border-[#00685f]/20">
             {user?.displayName ? user.displayName[0].toUpperCase() : (user?.email ? user.email[0].toUpperCase() : 'U')}
           </div>
@@ -171,30 +182,49 @@ export default function CourseViewerPage() {
       </header>
 
       <div className="flex flex-1 pt-20">
+        {/* Mobile Sidebar Backdrop */}
+        <AnimatePresence>
+          {isSidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-[#131b2e]/60 backdrop-blur-md z-[80] lg:hidden"
+            />
+          )}
+        </AnimatePresence>
+
         {/* Sidebar */}
-        <aside className="w-80 bg-white border-r border-slate-200 fixed left-0 h-[calc(100vh-80px)] flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-slate-100">
+        <aside className={`
+          fixed left-0 top-0 lg:top-20 h-full lg:h-[calc(100vh-80px)] w-80 bg-white border-r border-slate-200 
+          z-[90] lg:z-40 transition-transform duration-500 flex flex-col overflow-hidden
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between lg:block">
+            <div className="space-y-4 flex-1">
+              <button 
+                onClick={() => router.push('/dashboard/library')}
+                className="flex items-center gap-2 text-slate-400 hover:text-[#00685f] transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-[#00685f]/10 transition-colors">
+                  <ChevronLeft size={16} />
+                </div>
+                <span className="text-xs font-black uppercase tracking-widest">Exit Course</span>
+              </button>
+              <h2 className="text-lg font-black text-[#131b2e] leading-tight line-clamp-2">
+                {course.title}
+              </h2>
+            </div>
             <button 
-              onClick={() => router.push('/dashboard/my-courses')}
-              className="flex items-center gap-2 text-slate-400 hover:text-[#00685f] transition-colors mb-4 group"
+              onClick={() => setIsSidebarOpen(false)}
+              className="lg:hidden p-2 text-slate-400 hover:text-[#131b2e]"
             >
-              <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-[#00685f]/10 transition-colors">
-                <ChevronLeft size={16} />
-              </div>
-              <span className="text-xs font-black uppercase tracking-widest">Exit Course</span>
+              <X size={24} />
             </button>
-            <button
-              onClick={() => setShowUnenrollModal(true)}
-              className="flex items-center gap-2 text-red-400 hover:text-red-600 transition-colors mt-2 group"
-            >
-              <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
-                <LogOut size={14} className="text-red-400" />
-              </div>
-              <span className="text-xs font-black uppercase tracking-widest">Unenroll</span>
-            </button>
-            <h2 className="text-lg font-black text-[#131b2e] leading-tight mb-4 line-clamp-2">
-              {course.title}
-            </h2>
+          </div>
+          
+          <div className="px-6 py-4 border-b border-slate-100">
             <div className="space-y-2">
               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter">
                 <span className="text-slate-400">Total Progress</span>
@@ -209,6 +239,13 @@ export default function CourseViewerPage() {
                 />
               </div>
             </div>
+            <button
+               onClick={() => setShowUnenrollModal(true)}
+               className="flex items-center gap-2 text-red-400 hover:text-red-600 transition-colors mt-4 group"
+            >
+               <LogOut size={14} className="text-red-400" />
+               <span className="text-[10px] font-black uppercase tracking-widest">Unenroll From Course</span>
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
@@ -304,7 +341,7 @@ export default function CourseViewerPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="ml-80 flex-1 p-10 max-w-6xl mx-auto">
+        <main className="flex-1 lg:ml-80 p-4 sm:p-8 md:p-10 max-w-6xl mx-auto w-full">
           {/* Course Intro Card */}
           <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden mb-10">
             <div className="h-64 bg-gradient-to-br from-[#131b2e] to-[#00685f] relative flex items-center justify-center overflow-hidden">
