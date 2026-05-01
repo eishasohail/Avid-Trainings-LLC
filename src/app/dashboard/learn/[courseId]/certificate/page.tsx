@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { auth } from "@/lib/firebase/config"
 import { useAuthState } from "react-firebase-hooks/auth"
-import { getCourseById } from "@/lib/data/dummyData"
+import { getAllCourses } from "@/lib/utils/courseUtils"
 import Logo from "@/components/shared/Logo"
 
 export default function CertificatePage() {
@@ -50,7 +50,8 @@ export default function CertificatePage() {
     setIsEnrolled(true)
 
     // Course data
-    const foundCourse = getCourseById(courseId)
+    const allCourses = getAllCourses()
+    const foundCourse = allCourses.find(c => c.id === courseId)
     if (!foundCourse) {
       setLoading(false)
       return

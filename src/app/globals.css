@@ -223,7 +223,7 @@
 /* TipTap Editor Styles */
 .ProseMirror {
   outline: none;
-  min-height: 350px;
+  min-height: 100px;
 }
 
 .ProseMirror h1 {
@@ -311,9 +311,28 @@
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: #bcc9c6;
+  color: #9ca3af;
   pointer-events: none;
   height: 0;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* Remove extra space from empty trailing paragraph 
+   after a table inside ProseMirror */
+.ProseMirror table + p:empty,
+.ProseMirror table + p.is-editor-empty {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: 4px !important;
+}
+
+/* Also collapse empty paragraphs that are the only 
+   content in intro/outro areas */
+.ProseMirror:has(> p.is-editor-empty:only-child) {
+  min-height: 0 !important;
+  padding: 0 !important;
 }
 
 /* Brand Aesthetics: No italics */
@@ -421,4 +440,251 @@ blockquote p {
   html {
     @apply font-sans;
   }
+
+  button, 
+  a, 
+  select, 
+  input[type="submit"], 
+  input[type="button"], 
+  input[type="checkbox"], 
+  input[type="radio"], 
+  label, 
+  summary,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input:disabled,
+  a.disabled {
+    cursor: not-allowed;
+  }
+}
+
+/* Fix prose strikethrough conflict — CRITICAL */
+.ProseMirror table * {
+  text-decoration: none !important;
+}
+
+/* Avid High-Fidelity Table System */
+.prose .avid-table,
+.avid-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  table-layout: fixed !important;
+  width: 100% !important;
+  margin: 1.5rem 0 !important;
+  overflow: hidden !important;
+  border-radius: 1.5rem !important;
+  border: 2px solid #00685f20 !important;
+  box-shadow: 0 10px 30px -12px rgba(0, 104, 95, 0.15) !important;
+}
+
+.prose .avid-table td,
+.prose .avid-table th,
+.avid-table td,
+.avid-table th {
+  min-width: 100px !important;
+  border-bottom: 1px solid #00685f15 !important;
+  border-right: 1px solid #00685f15 !important;
+  padding: 16px 20px !important;
+  vertical-align: top !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  text-decoration: none !important;
+}
+
+/* Style the first row as a header automatically */
+.prose .avid-table tr:first-child th,
+.prose .avid-table tr:first-child td,
+.avid-table tr:first-child th,
+.prose .avid-table tr:hover td,
+.avid-table tr:hover td {
+  background-color: #ebfaf8 !important;
+  transition: background-color 0.15s !important;
+}
+
+.prose .avid-table tr:first-child th,
+.prose .avid-table tr:first-child td,
+.avid-table tr:first-child th,
+.avid-table tr:first-child td {
+  background-color: #00685f !important;
+  color: white !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-size: 0.85rem !important;
+  border-bottom-color: #ffffff20 !important;
+  border-right-color: #ffffff20 !important;
+}
+
+/* Remove extra borders on edges */
+.avid-table td:last-child,
+.avid-table th:last-child {
+  border-right: none !important;
+}
+
+.avid-table tr:last-child td,
+.avid-table tr:last-child th {
+  border-bottom: none !important;
+}
+
+/* Explicitly round the corner cells */
+.avid-table tr:first-child>*:first-child {
+  border-top-left-radius: 1.3rem !important;
+}
+
+.avid-table tr:first-child>*:last-child {
+  border-top-right-radius: 1.3rem !important;
+}
+
+.avid-table tr:last-child>*:first-child {
+  border-bottom-left-radius: 1.3rem !important;
+}
+
+.avid-table tr:last-child>*:last-child {
+  border-bottom-right-radius: 1.3rem !important;
+}
+
+.avid-table p {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: inherit !important;
+}
+
+.avid-table tr:first-child p {
+  color: white !important;
+}
+
+/* TipTap Editor Specifics */
+.ProseMirror .avid-table .selectedCell {
+  background-color: #00685f10 !important;
+  outline: 2px solid #00685f;
+}
+
+.ProseMirror .avid-table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #00685f;
+  pointer-events: none;
+}
+
+/* ── Avid Table — applies everywhere (editor + learner) ── */
+.avid-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+  margin: 2rem 0 !important;
+  border-radius: 1.5rem !important;
+  border: 2px solid rgba(0, 104, 95, 0.13) !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 30px -12px rgba(0, 104, 95, 0.12) !important;
+}
+
+.avid-table td,
+.avid-table th {
+  border: 1px solid rgba(0, 104, 95, 0.09) !important;
+  padding: 16px 20px !important;
+  vertical-align: top !important;
+  background-color: white !important;
+  text-decoration: none !important;
+}
+
+.avid-table tr:first-child th,
+.avid-table tr:first-child td {
+  background-color: #00685f !important;
+  color: white !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-size: 0.8rem !important;
+  border-color: rgba(255, 255, 255, 0.13) !important;
+  text-decoration: none !important;
+}
+
+.avid-table tr:first-child p {
+  color: white !important;
+  font-weight: 800 !important;
+  margin: 0 !important;
+}
+
+.avid-table tr:nth-child(even) td {
+  background-color: #f7f9fb !important;
+}
+
+.avid-table tr:hover td {
+  background-color: #f0fdfa !important;
+}
+
+.avid-table * {
+  text-decoration: none !important;
+}
+
+.avid-table tr:first-child>*:first-child {
+  border-top-left-radius: 1.3rem !important;
+}
+
+.avid-table tr:first-child>*:last-child {
+  border-top-right-radius: 1.3rem !important;
+}
+
+.avid-table tr:last-child>*:first-child {
+  border-bottom-left-radius: 1.3rem !important;
+}
+
+.avid-table tr:last-child>*:last-child {
+  border-bottom-right-radius: 1.3rem !important;
+}
+.ProseMirror p { margin-bottom: 0 !important; }
+.ProseMirror p:empty, .ProseMirror p br:only-child { height: 1em; }
+
+
+/* Collapse empty RichTextBlock when only placeholder exists */
+.ProseMirror:has(> p.is-editor-empty:only-child) {
+  min-height: 32px !important;
+}
+
+/* Remove margin from empty trailing paragraph after table */
+.ProseMirror table + p:empty,
+.ProseMirror table + p.is-editor-empty {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: 0 !important;
+  height: 4px !important;
+}
+
+
+/* Force collapse TipTap internal padding in compact mode */
+.compact-editor .ProseMirror {
+  padding: 0 !important;
+  min-height: auto !important; /* Allow growth */
+  margin: 0 !important;
+}
+
+/* Base height is 0 ONLY if no table or content is present */
+.compact-editor .ProseMirror:empty {
+  min-height: 0 !important;
+}
+
+.compact-editor .ProseMirror > p:first-child {
+  margin-top: 0 !important;
+}
+
+.compact-editor .ProseMirror > p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.compact-editor .ProseMirror p.is-editor-empty:only-child {
+  display: none !important;
+}
+
+/* Ensure tables are visible and styled inside compact-editor */
+.compact-editor .ProseMirror table {
+  display: table !important;
+  visibility: visible !important;
+  margin: 10px 0 !important;
 }

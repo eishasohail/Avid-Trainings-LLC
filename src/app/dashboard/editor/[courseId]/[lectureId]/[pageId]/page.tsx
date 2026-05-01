@@ -57,10 +57,20 @@ import {
   GripVertical,
   Link2,
   RemoveFormatting,
-  ChevronDown
+  ChevronDown,
+  Table as TableIcon,
+  Columns,
+  Rows,
+  PlusSquare,
+  MinusSquare,
+  MoveUp,
+  MoveDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
+
+import { saveImage } from "@/lib/utils/imageStorage"
+import { useImageSrc } from "@/hooks/useImageSrc"
 
 // Editor imports
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -74,6 +84,10 @@ import { Highlight } from '@tiptap/extension-highlight';
 import FontSize from 'tiptap-extension-font-size';
 import FontFamily from '@tiptap/extension-font-family';
 import Placeholder from '@tiptap/extension-placeholder';
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
 
 // Components
 import { ScrollStack, ScrollStackItem } from "@/components/reactbits/ScrollStack/ScrollStack";
@@ -108,6 +122,8 @@ interface PageContent {
   popupTitle?: string;
   popupContent?: string;
   popupType?: string;
+  popupImage?: string;
+  popupImagePosition?: string;
   sequenceItems?: { id: string; text: string }[];
   hotspots?: { id: string; x: number; y: number; label: string; isCorrect: boolean }[];
 }
@@ -172,10 +188,25 @@ export default function PageBuilderRoot() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [modalCategory, setModalCategory] = useState('All');
 
-  const openModalWithCategory = (category: string) => {
+  const activePage = pages.find(p => p.id === activePageId) || pages[0];
+
+  const resolvedPopupImage = useImageSrc(
+    activePage?.content?.popupImage
+  )
+
+  const openModalWithCategory = useCallback((category: string) => {
     setModalCategory(category);
     setIsModalOpen(true);
-  };
+  }, []);
+
+  const openModal = useCallback(() => {
+    setModalCategory('All');
+    setIsModalOpen(true);
+  }, []);
+
+  const openInfoModal = useCallback(() => {
+    setShowInfoModal(true);
+  }, []);
 
   // CRITICAL FIX: Reset everything when lectureId changes
   useEffect(() => {
@@ -192,7 +223,6 @@ export default function PageBuilderRoot() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
     }
   }, [pages, STORAGE_KEY, lectureId]);
-  const activePage = pages.find(p => p.id === activePageId) || pages[0];
 
   const handleUpdateContent = useCallback((content: Partial<PageContent>) => {
     setPages(prev => prev.map(p => p.id === activePageId ? { ...p, content: { ...p.content, ...content } } : p));
@@ -255,6 +285,21 @@ export default function PageBuilderRoot() {
           { id: '3', term: '', definition: '' }
         ]
         break
+      case 'image-stacked':
+        initialContent = {
+          intro: '',
+          outro: '',
+          image: '',
+          text: ''
+        }
+        break
+      case 'color-grid':
+        initialContent = {
+          title: '',
+          cells: ['', '', '', '', '', ''],
+          cols: 3
+        }
+        break
       default:
         initialContent = {}
     }
@@ -308,9 +353,9 @@ export default function PageBuilderRoot() {
     toast.success("Page deleted");
   };
 
-  const updatePageHeading = (heading: string) => {
+  const updatePageHeading = useCallback((heading: string) => {
     setPages(prev => prev.map(p => p.id === activePageId ? { ...p, heading } : p));
-  };
+  }, [activePageId]);
 
   const dockItems = [
     { icon: <Home size={20} className="text-indigo-600" />, label: 'Dashboard', onClick: () => router.push('/dashboard') },
@@ -319,10 +364,10 @@ export default function PageBuilderRoot() {
     { icon: <Save size={20} className="text-emerald-600" />, label: 'Save Draft', onClick: () => toast.success("Draft saved") },
   ];
 
-  const handlePageNav = (id: string) => {
+  const handlePageNav = useCallback((id: string) => {
     setActivePageId(id);
     router.push(`/dashboard/editor/${courseId}/${lectureId}/${id}`);
-  };
+  }, [courseId, lectureId, router]);
 
   return (
     <div className="fixed inset-0 bg-[#f7f9fb] text-[#191c1e] flex flex-col font-sans overflow-hidden antialiased">
@@ -355,7 +400,7 @@ export default function PageBuilderRoot() {
               <span className="text-slate-400">Page Builder</span>
             </div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-black text-[#131b2e] tracking-tight">{activePage?.title || 'Drafting Page'}</h1>
+              <h1 className="text-sm font-black text-[#131b2e] tracking-tight whitespace-normal break-words">{activePage?.title || 'Drafting Page'}</h1>
             </div>
           </div>
         </div>
@@ -407,7 +452,7 @@ export default function PageBuilderRoot() {
 
                     {/* Page info */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-[#131b2e] truncate uppercase tracking-tight">
+                      <p className="text-xs font-black text-[#131b2e] uppercase tracking-tight whitespace-normal break-words">
                         {p.title}
                       </p>
                       <p className="text-[10px] font-bold text-[#6d7a77] uppercase tracking-tighter mt-0.5">
@@ -439,9 +484,9 @@ export default function PageBuilderRoot() {
              key={`${activePage?.id || 'loading'}-${activePage?.layout || 'none'}`} 
              activePage={activePage} 
              isPreview={isPreview} 
-             openModal={() => { setModalCategory('All'); setIsModalOpen(true); }} 
+             openModal={openModal} 
              openModalWithCategory={openModalWithCategory}
-             openInfoModal={() => setShowInfoModal(true)} 
+             openInfoModal={openInfoModal} 
              onUpdateContent={handleUpdateContent} 
              updatePageHeading={updatePageHeading} 
              pages={pages} 
@@ -468,24 +513,86 @@ export default function PageBuilderRoot() {
                 </div>
                 {isPreview ? (
                   <div className="space-y-4 py-4">
-                    <div className="flex items-center gap-2"><span className="text-xl">{activePage.content.popupType?.split(' ')[0] || '💡'}</span><h4 className="font-black text-[#131b2e]">{activePage.content.popupTitle || 'Exclusive Insight'}</h4></div>
-                    <p className="text-sm text-slate-500 font-medium leading-relaxed">{activePage.content.popupContent || 'No details provided.'}</p>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-black text-[#131b2e] uppercase tracking-widest">
+                        {activePage.content.popupTitle || 'Exclusive Insight'}
+                      </h4>
+                    </div>
+                    {resolvedPopupImage && (
+                      <img src={resolvedPopupImage} className="w-full h-40 object-contain rounded-xl border border-slate-100" />
+                    )}
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                      {activePage.content.popupContent || 'No details provided.'}
+                    </p>
                   </div>
                 ) : (
                   <>
                     <p className="text-sm text-[#6d7a77] mb-4">Add contextual information that learners can access on this page</p>
                     <div className="space-y-4">
-                      <div><label className="text-xs font-bold text-[#6d7a77] uppercase tracking-wide">Popup Type</label>
-                        <select value={activePage.content.popupType || 'did-you-know'} onChange={(e) => handleUpdateContent({ popupType: e.target.value })} className="w-full mt-1 border border-[#bcc9c6] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#00685f]">
-                          <option value="did-you-know">💡 Did You Know</option>
-                          <option value="important-note">⚠️ Important Note</option>
-                          <option value="related-fact">📚 Related Fact</option>
-                        </select>
+                      <div>
+                        <label className="text-xs font-bold text-[#6d7a77] uppercase tracking-wide">Popup Image (Optional)</label>
+                        <div className="mt-2">
+                          {activePage.content.popupImage ? (
+                            <div className="relative group">
+                              <img src={resolvedPopupImage} className="w-full h-40 object-contain rounded-xl border border-slate-100" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 rounded-xl transition-opacity">
+                                <label className="cursor-pointer flex flex-col items-center text-white">
+                                  <input type="file" accept="image/*" className="hidden"
+                                    onChange={async (e) => {
+                                      if (e.target.files?.[0]) {
+                                        const key = await saveImage(e.target.files[0])
+                                        handleUpdateContent({ popupImage: key })
+                                      }
+                                    }} />
+                                  <ImageIcon size={20} className="mb-1" />
+                                  <span className="text-[9px] font-black uppercase">Change</span>
+                                </label>
+                                <button onClick={() => handleUpdateContent({ popupImage: '' })}
+                                  className="flex flex-col items-center text-red-400">
+                                  <Trash2 size={20} className="mb-1" />
+                                  <span className="text-[9px] font-black uppercase">Remove</span>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-[#00685f]/40 transition-colors min-h-[120px]">
+                              <input type="file" accept="image/*" className="hidden"
+                                onChange={async (e) => {
+                                  if (e.target.files?.[0]) {
+                                    const key = await saveImage(e.target.files[0])
+                                    handleUpdateContent({ popupImage: key })
+                                  }
+                                }} />
+                              <ImageIcon size={24} className="text-slate-300" />
+                              <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Add Image (Optional)</span>
+                            </label>
+                          )}
+                          
+                          {activePage.content.popupImage && (
+                            <div className="flex gap-2 justify-center mt-2">
+                              {['left','right','top','bottom','center'].map(pos => (
+                                <button
+                                  key={pos}
+                                  onClick={() => handleUpdateContent({ popupImagePosition: pos })}
+                                  className={`w-8 h-8 rounded-lg text-[9px] font-black uppercase transition-all
+                                    ${(activePage.content.popupImagePosition || 'left') === pos
+                                      ? 'bg-[#00685f] text-white'
+                                      : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                                    }`}
+                                >
+                                  {pos[0].toUpperCase()}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div><label className="text-xs font-bold text-[#6d7a77] uppercase tracking-wide">Title</label>
+                      <div>
+                        <label className="text-xs font-bold text-[#6d7a77] uppercase tracking-wide">Title</label>
                         <input value={activePage.content.popupTitle || ''} onChange={(e) => handleUpdateContent({ popupTitle: e.target.value })} placeholder="Enter popup title..." className="w-full mt-1 border border-[#bcc9c6] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#00685f]" />
                       </div>
-                      <div><label className="text-xs font-bold text-[#6d7a77] uppercase tracking-wide">Content</label>
+                      <div>
+                        <label className="text-xs font-bold text-[#6d7a77] uppercase tracking-wide">Content</label>
                         <textarea value={activePage.content.popupContent || ''} onChange={(e) => handleUpdateContent({ popupContent: e.target.value })} placeholder="Enter the information content..." className="w-full mt-1 border border-[#bcc9c6] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#00685f] resize-none" rows={4} />
                       </div>
                     </div>
@@ -555,9 +662,10 @@ export default function PageBuilderRoot() {
 }
 
 // --- CORE RENDERER ---
-function CanvasRenderer({ activePage, isPreview, openModal, openModalWithCategory, openInfoModal, onUpdateContent, updatePageHeading, pages, onPageChange }: any) {
+const CanvasRenderer = React.memo(function CanvasRenderer({ activePage, isPreview, openModal, openModalWithCategory, openInfoModal, onUpdateContent, updatePageHeading, pages, onPageChange }: any) {
   const [focusedEditor, setFocusedEditor] = useState<any>(null);
   const [styleOpen, setStyleOpen] = useState(false);
+  const [showTableConfirm, setShowTableConfirm] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -570,6 +678,14 @@ function CanvasRenderer({ activePage, isPreview, openModal, openModalWithCategor
       Highlight.configure({ multicolor: true }),
       FontSize as any,
       FontFamily as any,
+      FontSize as any,
+      FontFamily as any,
+      Table.configure({
+        HTMLAttributes: { class: 'avid-table' },
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
     ],
     content: activePage?.content?.text || '',
     onUpdate: ({ editor }) => onUpdateContent({ text: editor.getHTML() }),
@@ -589,6 +705,14 @@ function CanvasRenderer({ activePage, isPreview, openModal, openModalWithCategor
       Highlight.configure({ multicolor: true }),
       FontSize as any,
       FontFamily as any,
+      FontSize as any,
+      FontFamily as any,
+      Table.configure({
+        HTMLAttributes: { class: 'avid-table' },
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
       Placeholder.configure({ placeholder: 'Page heading...' }),
     ],
     content: activePage?.heading || '',
@@ -733,12 +857,16 @@ function CanvasRenderer({ activePage, isPreview, openModal, openModalWithCategor
                      </div>
                   </div>
              ) : (
-               <div className="bg-white rounded-2xl shadow-lg p-8 relative min-h-[500px]">
-                  {/* 2. PAGE HEADING */}
-                  {activePage?.heading && <div className="text-2xl font-bold text-[#191c1e] mb-6 prose prose-lg [&_p]:m-0" dangerouslySetInnerHTML={{ __html: activePage.heading }} /> }
+               <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 220px)' }}>
+                  {activePage?.heading && (
+                    <div className="w-full bg-[#00685f] px-12 py-5 shrink-0 z-10" style={{ width: '100%' }}>
+                      <h1 className="text-white font-black text-xl uppercase tracking-widest" dangerouslySetInnerHTML={{ __html: activePage.heading }} />
+                    </div>
+                  )}
 
-                  {/* 3. CONTENT BLOCK */}
-                  <PageBlockDispatcher layout={activePage.layout!} content={activePage.content} onUpdate={onUpdateContent} editor={editor} isPreview={isPreview} />
+                  <div className="flex-1 overflow-y-auto px-12 py-10 custom-scrollbar">
+                    <PageBlockDispatcher layout={activePage.layout!} content={activePage.content} onUpdate={onUpdateContent} editor={editor} isPreview={isPreview} />
+                  </div>
                   
                   {/* 4. INFO POPUP BUTTON */}
                   <div className="absolute bottom-4 right-4">
@@ -998,6 +1126,108 @@ function CanvasRenderer({ activePage, isPreview, openModal, openModalWithCategor
                           </div>
                         </div>
 
+                        {/* Contextual Table Section */}
+                        <div className="mb-4">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                            Table {targetEditor?.isActive('table') ? 'Management' : ''}
+                          </p>
+                          
+                          {!targetEditor?.isActive('table') ? (
+                            <div className="flex flex-col gap-2">
+                              <div className="flex gap-1">
+                                <button
+                                  onMouseDown={e => e.preventDefault()}
+                                  onClick={() => setShowTableConfirm(!showTableConfirm)}
+                                  className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all
+                                    ${showTableConfirm ? 'bg-[#00685f]/20 text-[#00685f]' : 'bg-slate-100 text-[#131b2e] hover:bg-slate-200'}`}
+                                >
+                                  <TableIcon className="w-4 h-4" />
+                                </button>
+                              </div>
+                              <AnimatePresence>
+                                {showTableConfirm && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="flex flex-col gap-1.5 overflow-hidden"
+                                  >
+                                    <button
+                                      onMouseDown={e => e.preventDefault()}
+                                      onClick={() => {
+                                        targetEditor?.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run();
+                                        setShowTableConfirm(false);
+                                        toast.success("2x2 Table inserted");
+                                      }}
+                                      className="w-full py-1.5 bg-slate-100 text-[#00685f] rounded-lg text-[8px] font-black uppercase hover:bg-[#00685f]/10 transition-colors"
+                                    >
+                                      Create 2x2 Table
+                                    </button>
+                                    <button
+                                      onMouseDown={e => e.preventDefault()}
+                                      onClick={() => {
+                                        targetEditor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+                                        setShowTableConfirm(false);
+                                        toast.success("3x3 Table inserted");
+                                      }}
+                                      className="w-full py-2 bg-[#00685f] text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#00685f]/90 transition-colors shadow-lg shadow-[#00685f]/20"
+                                    >
+                                      Create 3x3 Table
+                                    </button>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          ) : (
+                            <div className="space-y-4 animate-fade-in">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[8px] font-bold text-[#00685f] uppercase bg-[#00685f]/10 px-2 py-0.5 rounded-full">Active</span>
+                                <button
+                                  onMouseDown={e => e.preventDefault()}
+                                  onClick={() => targetEditor?.chain().focus().deleteTable().run()}
+                                  className="px-2 py-1 bg-red-50 text-red-500 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                                >
+                                  Delete Table
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <p className="text-[7px] font-black text-slate-400 uppercase">Rows</p>
+                                  <div className="flex gap-1">
+                                    <button onClick={() => targetEditor?.chain().focus().addRowBefore().run()} className="flex-1 py-1.5 bg-slate-50 rounded-lg text-[8px] font-black hover:bg-slate-100"><PlusSquare className="w-3 h-3 mx-auto" /></button>
+                                    <button onClick={() => targetEditor?.chain().focus().addRowAfter().run()} className="flex-1 py-1.5 bg-slate-50 rounded-lg text-[8px] font-black hover:bg-slate-100"><PlusSquare className="w-3 h-3 mx-auto" /></button>
+                                    <button onClick={() => targetEditor?.chain().focus().deleteRow().run()} className="flex-1 py-1.5 bg-red-50 text-red-400 rounded-lg text-[8px] font-black hover:bg-red-100"><MinusSquare className="w-3 h-3 mx-auto" /></button>
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[7px] font-black text-slate-400 uppercase">Cols</p>
+                                  <div className="flex gap-1">
+                                    <button onClick={() => targetEditor?.chain().focus().addColumnBefore().run()} className="flex-1 py-1.5 bg-slate-50 rounded-lg text-[8px] font-black hover:bg-slate-100"><PlusSquare className="w-3 h-3 mx-auto" /></button>
+                                    <button onClick={() => targetEditor?.chain().focus().addColumnAfter().run()} className="flex-1 py-1.5 bg-slate-50 rounded-lg text-[8px] font-black hover:bg-slate-100"><PlusSquare className="w-3 h-3 mx-auto" /></button>
+                                    <button onClick={() => targetEditor?.chain().focus().deleteColumn().run()} className="flex-1 py-1.5 bg-red-50 text-red-400 rounded-lg text-[8px] font-black hover:bg-red-100"><MinusSquare className="w-3 h-3 mx-auto" /></button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  onClick={() => targetEditor?.chain().focus().insertContentAt(targetEditor.state.selection.$from.before(-1), { type: 'paragraph' }).run()}
+                                  className="flex items-center justify-center gap-1.5 py-1.5 bg-slate-50 text-slate-500 rounded-lg text-[8px] font-black uppercase hover:bg-slate-200 transition-colors"
+                                >
+                                  <ArrowUp className="w-2.5 h-2.5" /> Space Above
+                                </button>
+                                <button
+                                  onClick={() => targetEditor?.chain().focus().insertContentAt(targetEditor.state.selection.$from.after(-1), { type: 'paragraph' }).run()}
+                                  className="flex items-center justify-center gap-1.5 py-1.5 bg-slate-50 text-slate-500 rounded-lg text-[8px] font-black uppercase hover:bg-slate-200 transition-colors"
+                                >
+                                  <ArrowDown className="w-2.5 h-2.5" /> Space Below
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
                         {/* Alignment Row */}
                         <div className="mb-3">
                           <p className="text-[9px] font-black uppercase 
@@ -1111,6 +1341,7 @@ function CanvasRenderer({ activePage, isPreview, openModal, openModalWithCategor
                             Clear
                           </button>
                         </div>
+
                             </>
                           );
                         })()}
@@ -1125,5 +1356,5 @@ function CanvasRenderer({ activePage, isPreview, openModal, openModalWithCategor
       </div>
     </div>
   );
-}
+});
 

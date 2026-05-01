@@ -17,9 +17,20 @@ export default function CourseLibraryPage() {
   const [isoFilter, setIsoFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   const [isLoadingCourse, setIsLoadingCourse] = useState<string | null>(null);
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setEnrollments(JSON.parse(localStorage.getItem('enrollments') || '[]'));
+    setEnrollments(JSON.parse(localStorage.getItem('avid-enrolled-courses') || '[]'));
+    
+    if (typeof window !== 'undefined') {
+      const all = getAllCourses();
+      const map: Record<string, string> = {};
+      all.forEach(c => {
+        const saved = localStorage.getItem(`avid-thumbnail-${c.id}`);
+        if (saved) map[c.id] = saved;
+      });
+      setThumbnails(map);
+    }
   }, []);
 
   useEffect(() => {
@@ -59,7 +70,7 @@ export default function CourseLibraryPage() {
   const handleAction = (courseId: string) => {
     setIsLoadingCourse(courseId);
     if (isEnrolled(courseId)) {
-      setTimeout(() => router.push(`/learn/${courseId}`), 400);
+      setTimeout(() => router.push(`/dashboard/learn/${courseId}`), 400);
     } else {
       setTimeout(() => router.push(`/dashboard/library/${courseId}`), 400);
     }
@@ -140,12 +151,18 @@ export default function CourseLibraryPage() {
                   
                   {/* Thumbnail */}
                   <div className="relative aspect-[16/10] overflow-hidden bg-[#131b2e]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#131b2e] to-[#00685f] opacity-80" />
-                    <div className="absolute inset-0 opacity-[0.1] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                    
-                    <div className="absolute top-6 left-6 px-4 py-2 bg-white/10 backdrop-blur-3xl rounded-2xl border border-white/20 text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-2xl">
+                    <div className="absolute top-6 left-6 px-4 py-2 bg-white/10 backdrop-blur-3xl rounded-2xl border border-white/20 text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-2xl z-10">
                        {course.isoStandard}
                     </div>
+                    
+                    {thumbnails[course.id] ? (
+                      <img src={thumbnails[course.id]} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#131b2e] to-[#00685f] opacity-80" />
+                        <div className="absolute inset-0 opacity-[0.1] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+                      </>
+                    )}
                     
                     {isEnrolled(course.id) && (
                       <div className="absolute top-6 right-6 bg-[#00685f] p-3 rounded-2xl text-white shadow-2xl shadow-[#00685f]/40">
@@ -168,11 +185,11 @@ export default function CourseLibraryPage() {
                       </span>
                     </div>
 
-                    <h3 className="text-2xl font-black text-[#191c1e] leading-tight mb-4 line-clamp-2 min-h-[64px] group-hover:text-[#00685f] transition-colors uppercase tracking-tight">
+                    <h3 className="text-2xl font-black text-[#191c1e] leading-tight mb-4 group-hover:text-[#00685f] transition-colors uppercase tracking-tight whitespace-normal break-words">
                       {course.title}
                     </h3>
                     
-                    <p className="text-sm font-medium text-[#6d7a77] line-clamp-2 mb-8 leading-relaxed">
+                    <p className="text-sm font-medium text-[#6d7a77] mb-8 leading-relaxed whitespace-normal break-words">
                       {course.description}
                     </p>
 

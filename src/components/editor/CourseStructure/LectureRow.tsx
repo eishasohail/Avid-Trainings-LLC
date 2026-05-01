@@ -101,7 +101,7 @@ export default function LectureRow({
                  ) : (
                     <p 
                       onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} 
-                      className="text-sm font-black text-[#191c1e] cursor-text truncate group-hover:text-[#00685f] transition-colors"
+                      className="text-sm font-black text-[#191c1e] cursor-text whitespace-normal break-words group-hover:text-[#00685f] transition-colors"
                     >
                        {title}
                     </p>

@@ -16,6 +16,7 @@ export default function LearnerDashboard({ user }: { user: AuthUser }) {
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [recentCourse, setRecentCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -80,6 +81,11 @@ export default function LearnerDashboard({ user }: { user: AuthUser }) {
     }
     setRecentCourse(mostRecent)
     setLoading(false)
+
+    if (mostRecent && typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`avid-thumbnail-${mostRecent.id}`)
+      if (saved) setThumbnail(saved)
+    }
   }, [])
 
   const curatedCourses = useMemo(() => {
@@ -152,16 +158,22 @@ export default function LearnerDashboard({ user }: { user: AuthUser }) {
             <div className="bg-[#f7f9fb] rounded-[32px] p-6 sm:p-8 border border-transparent hover:border-[#bcc9c6]/20 transition-all group/card">
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <div className="w-full sm:w-48 aspect-video bg-gradient-to-br from-[#00685f] to-[#131b2e] rounded-[24px] relative overflow-hidden shrink-0 shadow-lg">
-                   <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                   <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover/card:scale-110 transition-transform">
-                      <GraduationCap className="w-12 h-12 text-white" />
-                   </div>
+                   {thumbnail ? (
+                     <img src={thumbnail} alt={recentCourse.title} className="w-full h-full object-cover" />
+                   ) : (
+                     <>
+                       <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+                       <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover/card:scale-110 transition-transform">
+                          <GraduationCap className="w-12 h-12 text-white" />
+                       </div>
+                     </>
+                   )}
                 </div>
                 <div className="flex-1 space-y-6 w-full">
                   <div className="space-y-2">
                      <p className="text-[10px] font-black uppercase tracking-widest text-[#00685f]">Next Action Required</p>
-                     <h4 className="text-xl sm:text-2xl font-black text-[#191c1e] truncate">{recentCourse.title}</h4>
-                     <p className="text-sm font-medium text-[#6d7a77] opacity-80 leading-relaxed line-clamp-2">{recentCourse.description}</p>
+                     <h4 className="text-xl sm:text-2xl font-black text-[#191c1e] whitespace-normal break-words">{recentCourse.title}</h4>
+                     <p className="text-sm font-medium text-[#6d7a77] opacity-80 leading-relaxed whitespace-normal break-words">{recentCourse.description}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">

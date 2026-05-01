@@ -38,6 +38,10 @@ import { EditorContent } from '@tiptap/react'
 import RichTextBlock from '@/components/editor/PageBuilder/blocks/RichTextBlock'
 import CrossMatchBlock from '@/components/editor/PageBuilder/blocks/CrossMatchBlock'
 
+// Utils & Hooks
+import { saveImage } from "@/lib/utils/imageStorage"
+import { useImageSrc } from "@/hooks/useImageSrc"
+
 export const getVideoEmbed = (url: string) => {
   if (!url) return null
   
@@ -69,153 +73,169 @@ function ImageWithPosition({
   image, 
   position = 'right',
   children,
+  aboveChildren,
   isPreview,
   onImageChange,
   onPositionChange
 }: {
   image?: string
-  position?: 'left' | 'right' | 'top' | 'bottom'
+  position?: 'left' | 'right' | 'top' | 'bottom' | 'center'
   children: React.ReactNode
+  aboveChildren?: React.ReactNode
   isPreview: boolean
   onImageChange?: (url: string) => void
   onPositionChange?: (pos: string) => void
 }) {
-  const isHorizontal = position === 'left' || 
-    position === 'right'
-  const imageFirst = position === 'left' || 
-    position === 'top'
+  const resolvedSrc = useImageSrc(image)
+  const videoSrc = getVideoEmbed(image || '')
+  const hasImage = Boolean(image && typeof image === 'string' && image.trim() !== '' && image !== 'undefined' && image !== 'null')
+  const isVideo = !!videoSrc && !image?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)
 
-  const imageEl = (image || !isPreview) ? (
-    <div className={`
-      ${isHorizontal ? 'w-1/3 shrink-0' : 'w-full'}
-      relative group/imgwrap
-    `}>
-      {image ? (
-        <div className="relative">
-          <img
-            src={image}
-            className={`
-              w-full object-cover rounded-xl
-              ${isHorizontal ? 'h-full max-h-64' : 'max-h-48'}
-            `}
+  // Media Element Renderer
+  const renderMedia = (isCenter = false) => {
+    if (!hasImage) {
+      return !isPreview ? (
+        <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-[#00685f]/40 transition-colors w-full ${isCenter ? 'p-12 min-h-[200px]' : 'p-6 min-h-[120px]'}`}>
+          <input
+            type="file"
+            accept="image/*,video/*"
+            className="hidden"
+            onChange={async (e) => {
+              if (e.target.files?.[0]) {
+                const key = await saveImage(e.target.files[0])
+                onImageChange?.(key)
+              }
+            }}
           />
-          {!isPreview && (
-            <label className="absolute inset-0 
-              bg-black/40 opacity-0 
-              group/imgwrap:hover:opacity-100
-              flex flex-col items-center 
-              justify-center cursor-pointer 
-              rounded-xl transition-opacity">
+          {isCenter ? <ImageIcon size={32} className="text-slate-300" /> : <ImageIcon size={24} className="text-slate-300" />}
+          <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Add Media</span>
+        </label>
+      ) : null
+    }
+
+    // In preview mode, if we have an image key but no resolved URL yet, 
+    // hide it entirely to prevent broken icons while loading.
+    if (isPreview && !isVideo && !resolvedSrc) return null;
+
+    return (
+      <div className="relative group/imgwrap w-full">
+        {isVideo ? (
+          <div className={`aspect-video w-full rounded-xl overflow-hidden bg-black ${isCenter ? 'max-h-[500px]' : 'max-h-[300px]'}`}>
+            <iframe
+              src={videoSrc}
+              className="w-full h-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        ) : (
+          <img
+            src={resolvedSrc}
+            className={`w-full object-cover rounded-xl ${isCenter ? 'max-h-[500px] object-contain' : isHorizontal ? 'h-full max-h-64' : 'max-h-48'}`}
+          />
+        )}
+
+        {!isPreview && (
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/imgwrap:opacity-100 flex items-center justify-center gap-6 rounded-xl transition-opacity z-10">
+            <label className="flex flex-col items-center justify-center cursor-pointer hover:scale-110 transition-transform">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 className="hidden"
-                onChange={(e) => {
+                onChange={async (e) => {
                   if (e.target.files?.[0]) {
-                    onImageChange?.(
-                      URL.createObjectURL(
-                        e.target.files[0]
-                      )
-                    )
+                    const key = await saveImage(e.target.files[0])
+                    onImageChange?.(key)
                   }
                 }}
               />
-              <ImageIcon size={20} 
-                className="text-white mb-1" />
-              <span className="text-[9px] 
-                font-black uppercase text-white 
-                tracking-widest">
-                Change
-              </span>
+              <ImageIcon size={isCenter ? 24 : 20} className="text-white mb-1" />
+              <span className="text-[9px] font-black uppercase text-white tracking-widest">Change</span>
             </label>
-          )}
-        </div>
-      ) : (
-        !isPreview && (
-          <label className="flex flex-col 
-            items-center justify-center gap-2 
-            p-6 border-2 border-dashed 
-            border-slate-200 rounded-xl 
-            cursor-pointer 
-            hover:border-[#00685f]/40 
-            transition-colors min-h-[120px]">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.[0]) {
-                  onImageChange?.(
-                    URL.createObjectURL(
-                      e.target.files[0]
-                    )
-                  )
-                }
-              }}
-            />
-            <ImageIcon size={24} 
-              className="text-slate-300" />
-            <span className="text-[9px] 
-              font-black uppercase 
-              text-slate-400 tracking-widest">
-              Add Image
-            </span>
-          </label>
-        )
-      )}
+            <button 
+              onClick={() => onImageChange?.('')}
+              className="flex flex-col items-center justify-center cursor-pointer hover:scale-110 transition-transform text-red-400 hover:text-red-500">
+              <Trash2 size={isCenter ? 24 : 20} className="mb-1" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Remove</span>
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
 
-      {/* Position selector — editor only */}
-      {!isPreview && (image || true) && (
-        <div className="flex gap-1 mt-2 
-          justify-center">
-          {[
-            { key: 'left', label: 'L' },
-            { key: 'right', label: 'R' },
-            { key: 'top', label: 'T' },
-            { key: 'bottom', label: 'B' },
-          ].map(({ key, label }) => (
+  const isHorizontal = position === 'left' || position === 'right'
+  const imageFirst = position === 'left' || position === 'top'
+
+  // Center Position Specific Layout
+  if (position === 'center') {
+    if (!hasImage && isPreview) return <>{aboveChildren}{children}</>
+
+    return (
+      <div className="flex flex-col gap-6">
+        {aboveChildren && <div className="flex-1 min-w-0">{aboveChildren}</div>}
+        <div className="w-full flex justify-center items-center bg-slate-50/30 rounded-2xl overflow-hidden p-4 relative group/center">
+          {renderMedia(true)}
+        </div>
+        {!isPreview && (
+          <div className="flex gap-1 justify-center">
+            {['left','right','top','bottom','center'].map((key) => (
+              <button
+                key={key}
+                onClick={() => onPositionChange?.(key)}
+                className={`w-7 h-7 rounded-lg text-[9px] font-black uppercase transition-all ${position === key ? 'bg-[#00685f] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+              >
+                {key[0].toUpperCase()}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">{children}</div>
+      </div>
+    )
+  }
+
+  // Preview shortcut for all other positions
+  if (!hasImage && isPreview) {
+    return <>{aboveChildren}{children}</>
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {aboveChildren && <div className="flex-1 min-w-0">{aboveChildren}</div>}
+      <div className={`flex gap-6 ${isHorizontal ? 'flex-row items-start' : 'flex-col'} ${!imageFirst && isHorizontal ? 'flex-row-reverse' : ''} ${!imageFirst && !isHorizontal ? 'flex-col-reverse' : ''}`}>
+        <div className={isHorizontal ? 'w-1/3 shrink-0' : 'w-full'}>
+          {renderMedia(false)}
+        </div>
+        <div className="flex-1 min-w-0">
+          {children}
+        </div>
+      </div>
+      {!isPreview && (
+        <div className="flex gap-1 justify-center">
+          {['left','right','top','bottom','center'].map((key) => (
             <button
               key={key}
               onClick={() => onPositionChange?.(key)}
-              className={`w-7 h-7 rounded-lg 
-                text-[9px] font-black uppercase 
-                transition-all
-                ${position === key
-                  ? 'bg-[#00685f] text-white'
-                  : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                }`}
+              className={`w-7 h-7 rounded-lg text-[9px] font-black uppercase transition-all ${position === key ? 'bg-[#00685f] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
             >
-              {label}
+              {key[0].toUpperCase()}
             </button>
           ))}
         </div>
       )}
     </div>
-  ) : null
-
-  if (!image && isPreview) {
-    return <>{children}</>
-  }
-
-  return (
-    <div className={`flex gap-6 ${
-      isHorizontal ? 'flex-row items-start' : 'flex-col'
-    } ${
-      !imageFirst && isHorizontal 
-        ? 'flex-row-reverse' : ''
-    } ${
-      !imageFirst && !isHorizontal 
-        ? 'flex-col-reverse' : ''
-    }`}>
-      {imageEl}
-      <div className="flex-1 min-w-0">
-        {children}
-      </div>
-    </div>
   )
 }
 
-export function AccordionBlock({ items, onUpdate, isPreview }: any) {
+const isEmptyHtml = (html: string | undefined) => {
+  if (!html) return true
+  const t = html.trim()
+  return t === '' || t === '<p></p>' || t === '<p><br></p>'
+}
+
+export function AccordionBlock({ content, onUpdate, isPreview }: any) {
+  const items = content.items || [{ id: '1', title: 'Section 1', content: '' }]
   const [openIds, setOpenIds] = useState<string[]>([])
 
   const toggleItem = (id: string) => {
@@ -226,31 +246,53 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
     )
   }
 
+  const introEmpty = isEmptyHtml(content?.intro)
+  const outroEmpty = isEmptyHtml(content?.outro)
+
   return (
-    <div className="max-w-3xl mx-auto space-y-3">
+    <div className="max-w-3xl mx-auto">
+      {/* Intro Area */}
+      {(!isPreview || !introEmpty) && (
+        <div className={`compact-editor ${introEmpty ? 'mb-0' : 'mb-4'}`}>
+          <RichTextBlock
+            content={content?.intro || ''}
+            onChange={(html) => onUpdate({ 
+              items: content.items,
+              intro: html,
+              outro: content?.outro
+            })}
+            isPreview={isPreview}
+            compact={true}
+          />
+        </div>
+      )}
+
+      <div className="space-y-3">
       {items.map((item: any, idx: number) => {
         const isOpen = openIds.includes(item.id)
         
         return (
           <div 
             key={item.id}
-            className="border-2 border-slate-100 
-              rounded-2xl overflow-hidden
-              hover:border-[#00685f]/20 transition-colors"
+            className={`border rounded-2xl overflow-hidden transition-colors
+              ${isPreview ? 'border-slate-200' : 'border-2 border-slate-100'}
+              hover:border-[#00685f]/20`}
           >
             {/* Header */}
             <div 
               className={`flex items-center justify-between 
                 p-5 cursor-pointer transition-colors
                 ${isOpen 
-                  ? 'bg-[#00685f]/5 border-b-2 border-[#00685f]/10' 
+                  ? isPreview 
+                    ? 'bg-[#00685f] border-b border-[#00685f]'
+                    : 'bg-[#00685f]/5 border-b-2 border-[#00685f]/10'
                   : 'bg-white hover:bg-slate-50'
                 }`}
               onClick={() => toggleItem(item.id)}
             >
               {isPreview ? (
-                <h3 className="font-black text-[#131b2e] 
-                  text-lg">
+                <h3 className={`font-black text-lg transition-colors
+                  ${isOpen && isPreview ? 'text-white' : 'text-[#131b2e]'}`}>
                   {item.title || 'Section Title'}
                 </h3>
               ) : (
@@ -259,7 +301,7 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
                   onChange={(e) => {
                     const n = [...items]
                     n[idx].title = e.target.value
-                    onUpdate({ items: n })
+                    onUpdate({ ...content, items: n })
                   }}
                   onClick={(e) => e.stopPropagation()}
                   className="font-black text-[#131b2e] 
@@ -273,10 +315,9 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
                 animate={{ rotate: isOpen ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <ChevronDown className={`w-5 h-5 
-                  transition-colors
+                <ChevronDown className={`w-5 h-5 transition-colors
                   ${isOpen 
-                    ? 'text-[#00685f]' 
+                    ? isPreview ? 'text-white' : 'text-[#00685f]'
                     : 'text-slate-400'
                   }`} 
                 />
@@ -293,7 +334,7 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
                   transition={{ duration: 0.25 }}
                   className="overflow-hidden"
                 >
-                  <div className="p-5 bg-white">
+                  <div className={`bg-white ${isPreview ? 'p-8' : 'p-5'}`}>
                     <ImageWithPosition
                       image={item.image}
                       position={item.imagePosition || 'right'}
@@ -301,12 +342,12 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
                       onImageChange={(url) => {
                         const n = [...items]
                         n[idx].image = url
-                        onUpdate({ items: n })
+                        onUpdate({ ...content, items: n })
                       }}
                       onPositionChange={(pos) => {
                         const n = [...items]
                         n[idx].imagePosition = pos
-                        onUpdate({ items: n })
+                        onUpdate({ ...content, items: n })
                       }}
                     >
                       <RichTextBlock 
@@ -314,7 +355,7 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
                         onChange={(html) => { 
                           const n = [...items]
                           n[idx].content = html
-                          onUpdate({ items: n })
+                          onUpdate({ ...content, items: n })
                         }} 
                         isPreview={isPreview}
                       />
@@ -331,6 +372,7 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
       {!isPreview && (
         <button
           onClick={() => onUpdate({ 
+            ...content,
             items: [...items, { 
               id: Date.now().toString(), 
               title: `Section ${items.length + 1}`, 
@@ -353,6 +395,7 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
             <button
               key={item.id}
               onClick={() => onUpdate({ 
+                ...content,
                 items: items.filter(
                   (_: any, i: number) => i !== idx
                 ) 
@@ -368,6 +411,26 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
           ))}
         </div>
       )}
+      </div>
+
+      {/* Outro Area */}
+      {(!isPreview || !outroEmpty) && (
+        <div className={`compact-editor ${outroEmpty ? 'mt-2' : 'mt-4'}`}>
+          {!isPreview && outroEmpty && (
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1 mb-1">Content after sections (optional)</p>
+          )}
+          <RichTextBlock
+            content={content?.outro || ''}
+            onChange={(html) => onUpdate({ 
+              items: content.items,
+              intro: content?.intro,
+              outro: html
+            })}
+            isPreview={isPreview}
+            compact={true}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -375,51 +438,178 @@ export function AccordionBlock({ items, onUpdate, isPreview }: any) {
 export function TabsBlock({ layout, content, onUpdate, isPreview }: any) {
   const it = (content.items && content.items.length > 0) ? content.items : [{ id: '1', title: 'Tab 1', content: '' }];
   const [at, setAt] = useState(it[0]?.id || '1');
-  
+
+  const introEmpty = isEmptyHtml(content?.intro)
+  const outroEmpty = isEmptyHtml(content?.outro)
+
+  const addTab = () => {
+    const newId = Date.now().toString();
+    const newItems = [...it, { id: newId, title: `Tab ${it.length + 1}`, content: '' }];
+    onUpdate({ ...content, items: newItems });
+    setAt(newId);
+  };
+
+  const removeTab = (id: string) => {
+    const newItems = it.filter((t: any) => t.id !== id);
+    if (at === id && newItems.length > 0) {
+      setAt(newItems[0].id);
+    }
+    onUpdate({ ...content, items: newItems });
+  };
+
+  const isVertical = layout === 'v-tabs';
+
   return (
-    <div className={`max-w-4xl mx-auto flex ${layout === 'v-tabs' ? 'gap-10' : 'flex-col gap-6'}`}>
-      <div className={`flex shrink-0 ${layout === 'v-tabs' ? 'flex-col min-w-[180px]' : 'flex-wrap border-b border-slate-100 pb-2'}`}>
-        {it.map((tab:any, idx:any) => (
-          <div key={tab.id} className="relative group/tab">
-            <button onClick={() => setAt(tab.id)} className={`px-6 py-3 text-[10px] font-black uppercase rounded-xl ${at === tab.id ? 'bg-[#00685f] text-white' : 'text-slate-400'}`}>
-              <input value={tab.title} onClick={(e) => e.stopPropagation()} onChange={(e) => { const n = [...it]; n[idx].title = e.target.value; onUpdate({ items: n }); }} className="bg-transparent border-none p-0 outline-none w-20 uppercase font-black" />
-            </button>
-            <X size={12} className="absolute -top-1 -right-1 opacity-0 group-hover/tab:opacity-100 text-red-500 cursor-pointer" onClick={() => onUpdate({ items: it.filter((t:any) => t.id !== tab.id) })} />
-          </div>
-        ))}
-        <button onClick={() => onUpdate({ items: [...it, { id: Date.now().toString(), title: `New Tab`, content: '' }] })} className="px-4 py-2 text-[#00685f] font-black text-[9px] uppercase">+ Tab</button>
-      </div>
-      <div className="flex-1 min-h-[300px] bg-slate-50/50 rounded-[2.5rem] p-10">
-        {it.map((t:any, idx: number) => t.id === at && (
-          <ImageWithPosition
-            key={t.id}
-            image={t.image}
-            position={t.imagePosition || 'right'}
+    <div className="max-w-5xl mx-auto">
+      {/* Intro Area */}
+      {(!isPreview || !introEmpty) && (
+        <div className={`compact-editor ${introEmpty ? 'mb-2' : 'mb-4'}`}>
+          {!isPreview && introEmpty && (
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1 mb-1">Content before tabs (optional)</p>
+          )}
+          <RichTextBlock
+            content={content?.intro || ''}
+            onChange={(html) => onUpdate({ ...content, intro: html })}
             isPreview={isPreview}
-            onImageChange={(url) => {
-              const n = [...it]
-              n[idx].image = url
-              onUpdate({ items: n })
-            }}
-            onPositionChange={(pos) => {
-              const n = [...it]
-              n[idx].imagePosition = pos
-              onUpdate({ items: n })
-            }}
-          >
-            <RichTextBlock 
-              key={t.id} 
-              content={t.content} 
-              onChange={(html) => { 
-                const n = [...it]
-                n[idx].content = html
-                onUpdate({ items: n })
-              }} 
-              isPreview={isPreview}
-            />
-          </ImageWithPosition>
-        ))}
+            compact={true}
+          />
+        </div>
+      )}
+
+      <div className={`flex ${isVertical ? 'flex-row items-stretch' : 'flex-col'} bg-white border-2 border-[#00685f]/10 rounded-[2rem] overflow-hidden shadow-sm`}>
+        {/* Tab List */}
+        <div className={`flex shrink-0 ${isVertical ? 'flex-col w-[280px] border-r-2 border-[#00685f]/10 bg-[#f7f9fb]/50' : 'flex-row overflow-x-auto border-b-2 border-[#00685f]/10 bg-white no-scrollbar'}`}>
+          {it.map((tab: any, idx: number) => {
+            const isActive = at === tab.id;
+            return (
+              <div key={tab.id} className="relative group/tab flex">
+                <button
+                  onClick={() => setAt(tab.id)}
+                  className={`px-6 py-4 text-left transition-all relative min-w-fit flex-shrink-0
+                    ${isVertical ? 'w-full' : 'whitespace-nowrap'}
+                    ${!isPreview ? 'pr-12' : 'pr-6'}
+                    ${isActive 
+                      ? 'bg-[#00685f] text-white' 
+                      : 'bg-transparent text-slate-500 hover:bg-slate-50'
+                    }`}
+                >
+                  {isVertical && isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-400" />
+                  )}
+                  {!isVertical && isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-teal-400" />
+                  )}
+                  <div className="flex items-center gap-2 w-full">
+                    {!isPreview ? (
+                      <input
+                        value={tab.title}
+                        size={tab.title.length || 6}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          const n = [...it];
+                          n[idx].title = e.target.value;
+                          onUpdate({ ...content, items: n });
+                        }}
+                        className={`bg-transparent border-none p-0 outline-none font-black uppercase text-[10px] tracking-widest leading-relaxed break-words min-w-0
+                          ${isVertical ? 'w-full whitespace-normal' : ''}
+                          ${isActive ? 'text-white' : 'text-slate-500'}`}
+                        placeholder="Tab title..."
+                      />
+                    ) : (
+                      <span className="font-black uppercase text-[10px] tracking-widest leading-relaxed break-words whitespace-normal">
+                        {tab.title}
+                      </span>
+                    )}
+                  </div>
+                </button>
+
+                {!isPreview && it.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeTab(tab.id);
+                    }}
+                    className="absolute top-1/2 -translate-y-1/2 right-3 opacity-0 group-hover/tab:opacity-100 transition-opacity bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-1.5 rounded-md"
+                  >
+                    <X size={12} strokeWidth={3} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          {!isPreview && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                addTab();
+              }}
+              className={`flex items-center gap-2 px-6 py-5 text-[#00685f] font-black text-[9px] uppercase tracking-widest hover:bg-[#00685f]/10 transition-colors border-[#00685f]/5
+                ${isVertical ? 'text-left border-t' : 'border-l'}`}
+            >
+              <Plus size={14} strokeWidth={3} /> Add New Tab
+            </button>
+          )}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 min-h-[400px] bg-white p-12">
+          <AnimatePresence mode="wait">
+            {it.map((t: any, idx: number) => t.id === at && (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+                className="w-full h-full"
+              >
+                <ImageWithPosition
+                  image={t.image}
+                  position={t.imagePosition || 'center'}
+                  isPreview={isPreview}
+                  onImageChange={(url) => {
+                    const n = [...it]
+                    n[idx].image = url
+                    onUpdate({ ...content, items: n })
+                  }}
+                  onPositionChange={(pos) => {
+                    const n = [...it]
+                    n[idx].imagePosition = pos
+                    onUpdate({ ...content, items: n })
+                  }}
+                >
+                  <RichTextBlock 
+                    content={t.content} 
+                    onChange={(html) => { 
+                      const n = [...it]
+                      n[idx].content = html
+                      onUpdate({ ...content, items: n })
+                    }} 
+                    isPreview={isPreview}
+                  />
+                </ImageWithPosition>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
+
+      {/* Outro Area */}
+      {(!isPreview || !outroEmpty) && (
+        <div className={`compact-editor ${outroEmpty ? 'mt-2' : 'mt-4'}`}>
+          {!isPreview && outroEmpty && (
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1 mb-1">Content after tabs (optional)</p>
+          )}
+          <RichTextBlock
+            content={content?.outro || ''}
+            onChange={(html) => onUpdate({ ...content, outro: html })}
+            isPreview={isPreview}
+            compact={true}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -636,6 +826,7 @@ export function HotspotBlock({ content, onUpdate, isPreview }: any) {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedSpot, setSelectedSpot] = useState<any>(null);
   const spots = content.hotspots || [];
+  const resolvedSrc = useImageSrc(content.image);
 
   const handleImageClick = (e: any) => {
     if (!isAdding) return;
@@ -647,9 +838,10 @@ export function HotspotBlock({ content, onUpdate, isPreview }: any) {
     setIsAdding(false);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      onUpdate({ image: URL.createObjectURL(e.target.files[0]) });
+      const key = await saveImage(e.target.files[0]);
+      onUpdate({ image: key });
     }
   };
 
@@ -680,7 +872,7 @@ export function HotspotBlock({ content, onUpdate, isPreview }: any) {
       <div className="relative w-full h-64 border-2 border-dashed border-[#bcc9c6] rounded-lg overflow-hidden">
         {content.image ? (
           <div className="w-full h-full relative" onClick={handleImageClick}>
-            <img src={content.image} className="w-full h-full object-cover" />
+            {resolvedSrc && <img src={resolvedSrc} className="w-full h-full object-cover" />}
             {isAdding && (
               <div className="absolute inset-0 cursor-crosshair bg-transparent" />
             )}
@@ -784,6 +976,9 @@ export function HotspotBlock({ content, onUpdate, isPreview }: any) {
 }
 
 export default function PageBlockDispatcher({ layout, content, onUpdate, editor, isPreview }: any) {
+  const resolvedImage = useImageSrc(content.image);
+  const resolvedAudio = useImageSrc(content.audioUrl);
+
   const proseClasses = `prose prose-slate max-w-none 
     prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter prose-headings:text-[#131b2e]
     prose-p:text-[#191c1e] prose-p:font-medium prose-p:leading-relaxed prose-p:text-lg
@@ -886,133 +1081,183 @@ export default function PageBlockDispatcher({ layout, content, onUpdate, editor,
     case 'image-text-right':
       return editor ? (
         <div className={`flex gap-12 w-full items-center ${layout === 'image-text-right' ? 'flex-row-reverse' : ''}`}>
-          <div className="w-1/2 aspect-square border-4 border-dashed border-slate-100 rounded-[3rem] flex flex-col items-center justify-center bg-slate-50/50 cursor-pointer relative overflow-hidden group">
-            {content.image ? (
-              <>
-                <img src={content.image} className="w-full h-full object-cover" />
-                {!isPreview && (
-                  <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { if(e.target.files?.[0]) onUpdate({ image: URL.createObjectURL(e.target.files[0]) }) }} />
-                    <ImageIcon size={32} className="text-white mb-2" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white">Change Image</span>
-                  </label>
-                )}
-              </>
-            ) : (
-              <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => { if(e.target.files?.[0]) onUpdate({ image: URL.createObjectURL(e.target.files[0]) }) }} />
-                <ImageIcon size={48} className="text-slate-200 mb-4 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-[#00685f] transition-colors">Deploy Image</span>
-              </label>
-            )}
-          </div>
+          {content.image && content.image.trim() !== '' ? (
+            <div className="w-1/2 aspect-square rounded-[3rem] overflow-hidden relative group">
+              {resolvedImage && <img src={resolvedImage} className="w-full h-full object-cover" />}
+              {!isPreview && (
+                <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => { if(e.target.files?.[0]) { const key = await saveImage(e.target.files[0]); onUpdate({ image: key }) } }} />
+                  <ImageIcon size={32} className="text-white mb-2" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Change Image</span>
+                </label>
+              )}
+            </div>
+          ) : (
+            !isPreview && (
+              <div className="w-1/2 aspect-square border-4 border-dashed border-slate-100 rounded-[3rem] flex flex-col items-center justify-center bg-slate-50/50 cursor-pointer relative overflow-hidden group">
+                <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => { if(e.target.files?.[0]) { const key = await saveImage(e.target.files[0]); onUpdate({ image: key }) } }} />
+                  <ImageIcon size={48} className="text-slate-200 mb-4 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-[#00685f] transition-colors">Deploy Image</span>
+                </label>
+              </div>
+            )
+          )}
           <div className="flex-1"><EditorContent editor={editor} className={`${proseClasses} outline-none min-h-[350px] px-4 py-3`} /></div>
         </div>
       ) : null;
     case 'image-stacked':
+      const imageStackedIntroEmpty = isEmptyHtml(content?.intro)
+      const imageStackedOutroEmpty = isEmptyHtml(content?.outro)
+
+      return (
+        <div className="max-w-4xl mx-auto flex flex-col gap-6">
+          {/* Intro Area */}
+          {(!isPreview || !imageStackedIntroEmpty) && (
+            <div className={`compact-editor ${imageStackedIntroEmpty ? 'mb-0' : 'mb-4'}`}>
+              {!isPreview && imageStackedIntroEmpty && (
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1 mb-1">Content before image (optional)</p>
+              )}
+              <RichTextBlock
+                content={content?.intro || ''}
+                onChange={(html) => onUpdate({ ...content, intro: html })}
+                isPreview={isPreview}
+                compact={true}
+              />
+            </div>
+          )}
+
+          {/* Image */}
+          {(content.image && content.image.trim() !== '' || !isPreview) && (
+            <div className={`aspect-video w-full bg-slate-50 
+              ${(!content.image || content.image.trim() === '') ? 'border-4 border-dashed border-slate-100' : ''}
+              rounded-[3.5rem] overflow-hidden relative group`}>
+
+              {content.image && content.image.trim() !== '' ? (
+                <>
+                  {resolvedImage && <img src={resolvedImage} className="w-full h-full object-cover" />}
+                  {!isPreview && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <label className="flex flex-col items-center gap-2 cursor-pointer">
+                        <input type="file" accept="image/*" className="hidden" onChange={async (e) => { if(e.target.files?.[0]) { const key = await saveImage(e.target.files[0]); onUpdate({ ...content, image: key }) } }} />
+                        <div className="bg-white/90 hover:bg-white rounded-2xl px-5 py-3 flex items-center gap-2 shadow-lg transition-all">
+                          <ImageIcon size={16} className="text-[#00685f]" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[#131b2e]">Change</span>
+                        </div>
+                      </label>
+                      <button
+                        onClick={() => onUpdate({ ...content, image: '' })}
+                        className="bg-red-500/90 hover:bg-red-600 rounded-2xl px-5 py-3 flex items-center gap-2 shadow-lg transition-all"
+                      >
+                        <Trash2 size={16} className="text-white" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white">Remove</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                !isPreview && (
+                  <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer group/upload">
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => { if(e.target.files?.[0]) { const key = await saveImage(e.target.files[0]); onUpdate({ ...content, image: key }) } }} />
+                    <ImageIcon size={48} className="text-slate-200 mb-4 group-hover/upload:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover/upload:text-[#00685f] transition-colors">Deploy Image</span>
+                  </label>
+                )
+              )}
+            </div>
+          )}
+
+          {/* Outro Area */}
+          {(!isPreview || !imageStackedOutroEmpty) && (
+            <div className={`compact-editor ${imageStackedOutroEmpty ? 'mt-0' : 'mt-4'}`}>
+              {!isPreview && imageStackedOutroEmpty && (
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1 mb-1">Content after image (optional)</p>
+              )}
+              <RichTextBlock
+                content={content?.outro || ''}
+                onChange={(html) => onUpdate({ ...content, outro: html })}
+                isPreview={isPreview}
+                compact={true}
+              />
+            </div>
+          )}
+
+          {/* Main Content (Editor Legacy) */}
+          {editor && (
+            <div className="mt-4">
+              <EditorContent 
+                editor={editor}
+                className={`${proseClasses} outline-none min-h-[200px] px-4 py-3`}
+              />
+            </div>
+          )}
+        </div>
+      );
     case 'video-text':
       return editor ? (
         <div className="max-w-4xl mx-auto flex flex-col gap-10">
-          <div className="aspect-video w-full bg-slate-50 
-            border-4 border-dashed border-slate-100 
-            rounded-[3.5rem] overflow-hidden relative">
-            
-            {(layout === 'video-text' && content.videoUrl && getVideoEmbed(content.videoUrl)) ? (
-              // Show embedded video
-              content.videoUrl.match(/\.(mp4|webm|ogg)$/i) ? (
-                <video 
-                  src={content.videoUrl}
-                  controls
-                  className="w-full h-full object-cover rounded-[3rem]"
-                />
+          {(content.videoUrl || !isPreview) && (
+            <div className={`aspect-video w-full bg-slate-50 
+              ${!content.videoUrl ? 'border-4 border-dashed border-slate-100' : ''}
+              rounded-[3.5rem] overflow-hidden relative`}>
+              
+              {(content.videoUrl && getVideoEmbed(content.videoUrl)) ? (
+                <div className="relative w-full h-full group">
+                  {content.videoUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                    <video 
+                      src={content.videoUrl}
+                      controls
+                      className="w-full h-full object-cover rounded-[3rem]"
+                    />
+                  ) : (
+                    <iframe
+                      src={getVideoEmbed(content.videoUrl)!}
+                      className="w-full h-full rounded-[3rem]"
+                      allowFullScreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    />
+                  )}
+                  {!isPreview && (
+                    <button 
+                      onClick={() => onUpdate({ videoUrl: '' })}
+                      className="absolute top-6 right-6 bg-red-500 text-white p-3 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity shadow-xl hover:bg-red-600 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest"
+                    >
+                      <Trash2 size={16} /> Remove Video
+                    </button>
+                  )}
+                </div>
               ) : (
-                <iframe
-                  src={getVideoEmbed(content.videoUrl)!}
-                  className="w-full h-full rounded-[3rem]"
-                  allowFullScreen
-                  allow="accelerometer; autoplay; 
-                    clipboard-write; encrypted-media; 
-                    gyroscope; picture-in-picture"
-                />
-              )
-            ) : layout === 'video-text' ? (
-              // Empty state
-              <div className="absolute inset-0 flex flex-col 
-                items-center justify-center gap-4">
-                <Video size={48} className="text-slate-200" />
-                {!isPreview && (
-                  <input 
-                    placeholder="Paste YouTube, Vimeo or video URL here..."
-                    value={content.videoUrl || ''}
-                    onChange={(e) => onUpdate({ 
-                      videoUrl: e.target.value 
-                    })}
-                    className="mt-2 px-6 py-3 bg-white 
-                      border border-slate-200 rounded-full 
-                      text-xs w-80 text-center outline-none
-                      focus:border-[#00685f]"
-                  />
-                )}
-              </div>
-            ) : (
-              // Image Stacked logic
-              <>
-                {content.image ? (
-                  <>
-                    <img src={content.image} className="w-full h-full object-cover" />
-                    {!isPreview && (
-                      <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => { if(e.target.files?.[0]) onUpdate({ image: URL.createObjectURL(e.target.files[0]) }) }} />
-                        <ImageIcon size={32} className="text-white mb-2" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white">Change Image</span>
-                      </label>
-                    )}
-                  </>
-                ) : (
-                  <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { if(e.target.files?.[0]) onUpdate({ image: URL.createObjectURL(e.target.files[0]) }) }} />
-                    <ImageIcon size={48} className="text-slate-200 mb-4 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-[#00685f] transition-colors">Deploy Image</span>
-                  </label>
-                )}
-              </>
-            )}
-
-            {/* Change video button when video exists */}
-            {layout === 'video-text' && content.videoUrl && !isPreview && (
-              <button
-                onClick={() => onUpdate({ videoUrl: '' })}
-                className="absolute top-4 right-4 
-                  px-3 py-1.5 bg-white/90 backdrop-blur-sm
-                  rounded-xl text-xs font-black text-slate-500
-                  hover:text-red-500 border border-slate-200
-                  transition-colors shadow-sm"
-              >
-                Remove Video
-              </button>
-            )}
-          </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                  <Video size={48} className="text-slate-200" />
+                  {!isPreview && (
+                    <input 
+                      placeholder="Paste YouTube, Vimeo or video URL here..."
+                      value={content.videoUrl || ''}
+                      onChange={(e) => onUpdate({ videoUrl: e.target.value })}
+                      className="mt-2 px-6 py-3 bg-white border border-slate-200 rounded-full text-xs w-80 text-center outline-none focus:border-[#00685f]"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <EditorContent 
             editor={editor}
             className={`${proseClasses} outline-none min-h-[200px] px-4 py-3`}
           />
 
-          {/* URL input when video exists - editor only */}
-          {layout === 'video-text' && !isPreview && content.videoUrl && (
+          {!isPreview && content.videoUrl && (
             <input 
               placeholder="Change video URL..."
               value={content.videoUrl || ''}
-              onChange={(e) => onUpdate({ 
-                videoUrl: e.target.value 
-              })}
-              className="px-4 py-2 border border-slate-200 
-                rounded-xl text-xs outline-none w-full
-                focus:border-[#00685f] text-slate-500"
+              onChange={(e) => onUpdate({ videoUrl: e.target.value })}
+              className="px-4 py-2 border border-slate-200 rounded-xl text-xs outline-none w-full focus:border-[#00685f] text-slate-500"
             />
           )}
         </div>
       ) : null;
+
     case 'audio-text':
       return editor ? (
         <div className="max-w-3xl mx-auto flex flex-col gap-10">
@@ -1027,11 +1272,13 @@ export default function PageBlockDispatcher({ layout, content, onUpdate, editor,
             {content.audioUrl ? (
               <>
                 {/* Real audio player */}
-                <audio 
-                  controls
-                  src={content.audioUrl}
-                  className="w-full"
-                />
+                {resolvedAudio && (
+                  <audio 
+                    controls
+                    src={resolvedAudio}
+                    className="w-full"
+                  />
+                )}
                 
                 {/* Remove button */}
                 {!isPreview && (
@@ -1079,13 +1326,10 @@ export default function PageBlockDispatcher({ layout, content, onUpdate, editor,
                       type="file"
                       accept="audio/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         if (e.target.files?.[0]) {
-                          onUpdate({
-                            audioUrl: URL.createObjectURL(
-                              e.target.files[0]
-                            )
-                          })
+                          const key = await saveImage(e.target.files[0])
+                          onUpdate({ audioUrl: key })
                         }
                       }}
                     />
@@ -1102,19 +1346,14 @@ export default function PageBlockDispatcher({ layout, content, onUpdate, editor,
           />
         </div>
       ) : null;
-    case 'accordion': {
-      const items = content.items || [
-        { id: '1', title: 'Section 1', content: '' }
-      ]
-      
+    case 'accordion':
       return (
         <AccordionBlock
-          items={items}
+          content={content}
           onUpdate={onUpdate}
           isPreview={isPreview}
         />
       )
-    }
     case 'h-tabs':
     case 'v-tabs':
       return <TabsBlock layout={layout} content={content} onUpdate={onUpdate} isPreview={isPreview} />;
@@ -1166,7 +1405,127 @@ export default function PageBlockDispatcher({ layout, content, onUpdate, editor,
       );
     case 'hotspot':
       return <HotspotBlock content={content} onUpdate={onUpdate} isPreview={isPreview} />;
+    case 'color-grid':
+      return <ColorGridBlock content={content} onUpdate={onUpdate} isPreview={isPreview} />;
     default:
       return (<div className="w-full min-h-[400px] border-4 border-dashed border-slate-100 rounded-[3rem] flex flex-col items-center justify-center bg-slate-50/20"><div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-slate-200 mb-6"><Maximize2 size={32}/></div><p className="text-slate-400 text-sm font-black uppercase tracking-widest opacity-40">Blank Canvas</p></div>);
   }
+}
+
+export function ColorGridBlock({ content, onUpdate, isPreview }: any) {
+  const title = content.title || ''
+  const cells = content.cells || ['', '', '', '', '', '']
+  const cols = content.cols || 3
+
+  if (isPreview) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        {title && (
+          <div className="bg-[#00685f] px-6 py-4 mb-0 rounded-t-xl">
+            <h3 className="text-white font-black text-base uppercase tracking-wide">
+              {title}
+            </h3>
+          </div>
+        )}
+        <div
+          className={`grid gap-0.5 bg-white border-2 border-slate-100 overflow-hidden ${
+            title ? 'rounded-b-xl' : 'rounded-xl'
+          }`}
+          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+        >
+          {cells.map((cell: string, i: number) => (
+            <div
+              key={i}
+              className={`p-4 min-h-[60px] flex items-center text-sm font-semibold border border-white ${
+                i % 2 === 0
+                  ? 'bg-[#e6f3f2] text-[#00685f]'
+                  : 'bg-[#f0faf9] text-[#131b2e]'
+              }`}
+            >
+              {cell}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-4">
+      <div className="space-y-1">
+        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+          Grid Title
+        </label>
+        <input
+          value={title}
+          onChange={(e) => onUpdate({ ...content, title: e.target.value })}
+          placeholder="e.g. Activity Answers"
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#00685f] font-bold text-[#131b2e] text-sm transition-colors"
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+          Columns
+        </span>
+        <div className="flex gap-1">
+          {[2, 3, 4].map(n => (
+            <button
+              key={n}
+              onClick={() => onUpdate({ ...content, cols: n })}
+              className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${
+                cols === n
+                  ? 'bg-[#00685f] text-white'
+                  : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="grid gap-0.5 bg-slate-100 rounded-xl overflow-hidden border border-slate-200"
+        style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+      >
+        {cells.map((cell: string, i: number) => (
+          <div
+            key={i}
+            className={`relative group/cell p-2 min-h-[60px] flex items-center border border-white ${
+              i % 2 === 0 ? 'bg-[#e6f3f2]' : 'bg-[#f0faf9]'
+            }`}
+          >
+            <input
+              value={cell}
+              onChange={(e) => {
+                const n = [...cells]
+                n[i] = e.target.value
+                onUpdate({ ...content, cells: n })
+              }}
+              placeholder={`Cell ${i + 1}`}
+              className={`w-full bg-transparent border-none outline-none text-sm font-semibold placeholder:opacity-50 ${
+                i % 2 === 0
+                  ? 'text-[#00685f] placeholder:text-[#00685f]/50'
+                  : 'text-[#131b2e] placeholder:text-[#131b2e]/40'
+              }`}
+            />
+            <button
+              onClick={() => onUpdate({ ...content, cells: cells.filter((_: any, idx: number) => idx !== i) })}
+              className="absolute top-1 right-1 opacity-0 group-hover/cell:opacity-100 transition-opacity w-4 h-4 bg-[#00685f]/20 rounded flex items-center justify-center"
+            >
+              <X size={10} className="text-[#00685f]" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => onUpdate({ ...content, cells: [...cells, ''] })}
+        className="flex items-center gap-2 text-[#00685f] font-black text-[10px] uppercase tracking-widest hover:opacity-70 transition-opacity"
+      >
+        <Plus size={16} /> Add Cell
+      </button>
+    </div>
+  )
 }

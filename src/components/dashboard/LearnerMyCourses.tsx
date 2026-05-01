@@ -12,6 +12,7 @@ export default function LearnerMyCourses({ user }: { user: AuthUser }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -51,6 +52,15 @@ export default function LearnerMyCourses({ user }: { user: AuthUser }) {
 
     setEnrolledCourses(enriched);
     setLoading(false);
+
+    if (typeof window !== 'undefined') {
+      const map: Record<string, string> = {}
+      enriched.forEach(c => {
+        const saved = localStorage.getItem(`avid-thumbnail-${c.id}`)
+        if (saved) map[c.id] = saved
+      })
+      setThumbnails(map)
+    }
   }, []);
 
   const filtered = enrolledCourses.filter(c => {
@@ -139,8 +149,12 @@ export default function LearnerMyCourses({ user }: { user: AuthUser }) {
           filtered.map((course, i) => (
             <div key={course.id} className="group flex flex-col bg-white rounded-[40px] border border-[#bcc9c6]/40 overflow-hidden shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all duration-700 animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
               <div className="relative aspect-video overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#00685f] to-[#131b2e] group-hover:scale-110 transition-transform duration-1000" />
-                <div className="absolute top-4 left-4 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-[9px] font-black text-white uppercase tracking-widest">
+                {thumbnails[course.id] ? (
+                  <img src={thumbnails[course.id]} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00685f] to-[#131b2e] group-hover:scale-110 transition-transform duration-1000" />
+                )}
+                <div className="absolute top-4 left-4 px-3 py-1 bg-[#131b2e]/90 backdrop-blur-xl rounded-full border border-white/10 text-[9px] font-black text-emerald-400 uppercase tracking-widest shadow-lg">
                    ISO COMPLIANT
                 </div>
                 {course.status === 'Completed' && (
@@ -152,7 +166,7 @@ export default function LearnerMyCourses({ user }: { user: AuthUser }) {
 
               <div className="p-6 flex flex-col flex-1 space-y-6">
                 <div className="space-y-3">
-                  <h3 className="text-lg font-black text-[#191c1e] leading-tight group-hover:text-[#00685f] transition-colors line-clamp-2 min-h-[48px] uppercase">{course.title}</h3>
+                  <h3 className="text-lg font-black text-[#191c1e] leading-tight group-hover:text-[#00685f] transition-colors whitespace-normal break-words uppercase">{course.title}</h3>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-[#f7f9fb] flex items-center justify-center overflow-hidden border border-[#bcc9c6]/20">
                        <span className="text-[9px] font-black text-[#00685f]">{course.creatorName?.charAt(0)}</span>

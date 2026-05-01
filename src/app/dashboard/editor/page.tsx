@@ -56,6 +56,22 @@ export default function EditorPage() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
+
+  // Load all data
+  useEffect(() => {
+    const all = getAllCourses();
+    setCourses(all);
+    
+    if (typeof window !== 'undefined') {
+      const map: Record<string, string> = {};
+      all.forEach(c => {
+        const saved = localStorage.getItem(`avid-thumbnail-${c.id}`);
+        if (saved) map[c.id] = saved;
+      });
+      setThumbnails(map);
+    }
+  }, []);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -71,9 +87,6 @@ export default function EditorPage() {
   };
 
   // Unified Data Loading
-  useEffect(() => {
-    setCourses(getAllCourses());
-  }, []);
 
   const filteredCourses = useMemo(() => {
      return courses.filter(course => {
@@ -292,27 +305,25 @@ export default function EditorPage() {
                 <div key={course.id} className="group flex flex-col bg-white rounded-[56px] border border-[#bcc9c6]/30 overflow-hidden shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all duration-700 animate-fade-in-up min-h-[640px]" style={{ animationDelay: `${i * 150}ms` }}>
                    <div className="relative h-72 bg-gradient-to-br from-[#131b2e] to-[#00685f] overflow-hidden">
                       <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                      <div className="absolute inset-0 flex items-center justify-center translate-y-10 group-hover:translate-y-0 transition-transform duration-700">
-                         <div className="w-36 h-36 rounded-[40px] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl flex items-center justify-center p-8 text-white group-hover:scale-110 transition-all duration-700">
-                            <Layout className="w-full h-full opacity-40" />
-                         </div>
-                      </div>
-                      <div className="absolute top-8 left-8 px-5 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-[9px] font-black text-white uppercase tracking-[0.3em] shadow-sm">
+                      
+                      {thumbnails[course.id] ? (
+                        <img src={thumbnails[course.id]} alt={course.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center translate-y-10 group-hover:translate-y-0 transition-transform duration-700">
+                           <div className="w-36 h-36 rounded-[40px] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl flex items-center justify-center p-8 text-white group-hover:scale-110 transition-all duration-700">
+                              <Layout className="w-full h-full opacity-40" />
+                           </div>
+                        </div>
+                      )}
+                      <div className="absolute top-8 left-8 bg-white/95 backdrop-blur-md px-5 py-2 rounded-full border border-white/50 text-[9px] font-black text-[#131b2e] uppercase tracking-[0.3em] shadow-lg">
                          {course.isoStandard}
-                      </div>
-                      <div className={`absolute top-8 right-8 px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.3em] shadow-lg border ${
-                         course.status === 'published' 
-                            ? 'bg-emerald-500 text-white border-emerald-400' 
-                            : 'bg-amber-500 text-white border-amber-400'
-                      }`}>
-                         {course.status}
                       </div>
                    </div>
 
                    <div className="p-10 space-y-8 flex flex-col flex-1 relative bg-white">
                       <div className="space-y-4">
-                         <h3 className="text-2xl sm:text-3xl font-black text-[#191c1e] group-hover:text-[#00685f] transition-colors leading-tight uppercase">{course.title}</h3>
-                         <p className="text-sm font-medium text-[#6d7a77] line-clamp-2 leading-relaxed opacity-70">{course.description}</p>
+                         <h3 className="text-2xl sm:text-3xl font-black text-[#191c1e] group-hover:text-[#00685f] transition-colors leading-tight uppercase whitespace-normal break-words">{course.title}</h3>
+                         <p className="text-sm font-medium text-[#6d7a77] leading-relaxed opacity-70 whitespace-normal break-words">{course.description}</p>
                       </div>
 
                       <div className="flex items-center justify-between py-6 border-y border-[#bcc9c6]/10 h-24">

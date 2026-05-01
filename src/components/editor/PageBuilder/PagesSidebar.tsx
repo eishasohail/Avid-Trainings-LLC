@@ -73,7 +73,7 @@ export default function PagesSidebar({
                 </div>
 
                 <div className="flex-1 min-w-0 pr-6">
-                  <h4 className={`text-[13px] font-black truncate leading-tight ${isActive ? 'text-[#00685f]' : 'text-[#131b2e]'}`}>
+                  <h4 className={`text-[13px] font-black leading-tight whitespace-normal break-words ${isActive ? 'text-[#00685f]' : 'text-[#131b2e]'}`}>
                     {page.title}
                   </h4>
                   <p className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">

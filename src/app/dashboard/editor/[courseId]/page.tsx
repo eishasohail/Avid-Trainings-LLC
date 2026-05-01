@@ -416,7 +416,7 @@ export default function CourseStructurePage() {
               {/* Main Info Block */}
               <div className="px-10 py-8 space-y-6">
                  <div>
-                    <h1 className="text-3xl font-black text-[#131b2e] tracking-tighter uppercase leading-[1.1] max-w-3xl">
+                    <h1 className="text-3xl font-black text-[#131b2e] tracking-tighter uppercase leading-[1.1] max-w-3xl whitespace-normal break-words">
                        {course.title}
                     </h1>
                  </div>

@@ -21,7 +21,7 @@ export default function PageRow({ id, courseId, lectureId, index, title, onDelet
         </div>
         <div className="flex items-center gap-3">
           <FileText className="w-4 h-4 text-[#bcc9c6] group-hover/page:text-[#00685f] transition-colors" />
-          <p className="text-sm font-bold text-[#191c1e]">{title}</p>
+          <p className="text-sm font-bold text-[#191c1e] whitespace-normal break-words">{title}</p>
         </div>
       </div>
 

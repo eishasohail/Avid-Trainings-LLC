@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -14,19 +14,34 @@ import {
   X
 } from "lucide-react";
 import { getPublishedCourses } from '@/lib/data/dummyData';
+import { getAllCourses } from "@/lib/utils/courseUtils";
 import Logo from "@/components/shared/Logo"
 
 export default function PublicCoursesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
+
+  const allPublished = useMemo(() => getAllCourses().filter(c => c.status === 'published'), []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const map: Record<string, string> = {};
+      allPublished.forEach(c => {
+        const saved = localStorage.getItem(`avid-thumbnail-${c.id}`);
+        if (saved) map[c.id] = saved;
+      });
+      setThumbnails(map);
+    }
+  }, [allPublished]);
 
   const courses = useMemo(() => {
-    return getPublishedCourses().filter(c => 
+    return allPublished.filter(c => 
       c.title.toLowerCase().includes(search.toLowerCase()) ||
       c.isoStandard.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search]);
+  }, [allPublished, search]);
 
   return (
     <div className="min-h-screen bg-[#fafcfc] font-sans selection:bg-[#00685f]/15 overflow-x-hidden antialiased text-[#11221f]">
@@ -83,18 +98,25 @@ export default function PublicCoursesPage() {
                   className="group bg-white border border-[#00685f]/5 rounded-[56px] overflow-hidden shadow-sm hover:shadow-[0_60px_120px_-20px_rgba(0,104,95,0.12)] transition-all duration-1000 flex flex-col cursor-pointer"
                   onClick={() => router.push(`/courses/${course.id}`)}
                 >
-                   <div className={`h-[240px] bg-gradient-to-br ${grads[i % grads.length]} p-12 flex flex-col justify-between relative group-hover:scale-105 transition-transform duration-1000`}>
-                      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
+                   <div className={`h-[240px] bg-gradient-to-br ${grads[i % grads.length]} p-8 flex flex-col justify-between relative group-hover:scale-105 transition-transform duration-1000`}>
+                      {thumbnails[course.id] ? (
+                        <img src={thumbnails[course.id]} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
+                      )}
                       <div className="flex justify-between items-start relative z-10">
-                         <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.4em]">ISO Standard</span>
-                         <ArrowRight className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform" />
+                        <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/50 shadow-lg">
+                          <span className="text-[10px] font-black text-[#131b2e] uppercase tracking-widest">{course.isoStandard}</span>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white group-hover:bg-[#00685f] group-hover:border-[#00685f] transition-all duration-500 shadow-md">
+                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </div>
                       </div>
-                      <h4 className="text-3xl font-black text-white tracking-[0.1em] leading-none uppercase relative z-10">{course.isoStandard}</h4>
                    </div>
                    <div className="p-12 flex flex-col justify-between flex-1 relative bg-white">
                       <div className="space-y-6">
-                         <h3 className="text-2xl font-black text-[#131b2e] group-hover:text-[#00685f] transition-all duration-500">{course.title}</h3>
-                         <p className="text-sm font-medium text-[#6d7a77] line-clamp-2 leading-relaxed">{course.description}</p>
+                         <h3 className="text-2xl font-black text-[#131b2e] group-hover:text-[#00685f] transition-all duration-500 whitespace-normal break-words">{course.title}</h3>
+                         <p className="text-sm font-medium text-[#6d7a77] leading-relaxed whitespace-normal break-words">{course.description}</p>
                          <div className="inline-block px-3 py-1 bg-[#f0f4f4] text-[#00685f] text-[9px] font-black uppercase tracking-widest rounded-lg">
                             {course.category}
                          </div>

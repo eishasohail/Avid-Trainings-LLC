@@ -28,6 +28,7 @@ export default function CreatorMyCourses({ user }: { user: AuthUser }) {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   const [newCourse, setNewCourse] = useState({
@@ -40,7 +41,16 @@ export default function CreatorMyCourses({ user }: { user: AuthUser }) {
 
   // Load and merge courses on mount
   useEffect(() => {
-    setCourses(getAllCourses());
+    if (typeof window === 'undefined') return;
+    const all = getAllCourses();
+    setCourses(all);
+    
+    const map: Record<string, string> = {};
+    all.forEach(c => {
+      const saved = localStorage.getItem(`avid-thumbnail-${c.id}`);
+      if (saved) map[c.id] = saved;
+    });
+    setThumbnails(map);
   }, []);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -182,9 +192,13 @@ export default function CreatorMyCourses({ user }: { user: AuthUser }) {
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <div className="relative aspect-video overflow-hidden shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#131b2e] to-[#00685f] group-hover:scale-105 transition-transform duration-1000" />
-                <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md rounded-full border text-[9px] font-black uppercase tracking-widest ${
-                  course.status === 'published' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                {thumbnails[course.id] ? (
+                  <img src={thumbnails[course.id]} alt={course.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#131b2e] to-[#00685f] group-hover:scale-105 transition-transform duration-1000" />
+                )}
+                <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-xl rounded-full border text-[9px] font-black uppercase tracking-widest shadow-lg ${
+                  course.status === 'published' ? 'bg-[#131b2e]/90 border-white/10 text-emerald-400' : 'bg-[#131b2e]/90 border-white/10 text-amber-400'
                 }`}>
                    {course.status}
                 </div>

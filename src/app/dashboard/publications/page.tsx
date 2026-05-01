@@ -30,11 +30,21 @@ export default function PublicationsPage() {
   const [viewMode, setViewMode] = useState<"card" | "table">("card");
   const [searchQuery, setSearchQuery] = useState("");
   const [courses, setCourses] = useState<Course[]>([]);
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
     const all = getAllCourses();
-    setCourses(all.filter(c => c.status === 'published'));
+    const published = all.filter(c => c.status === 'published');
+    setCourses(published);
+
+    const map: Record<string, string> = {};
+    published.forEach(c => {
+      const saved = localStorage.getItem(`avid-thumbnail-${c.id}`);
+      if (saved) map[c.id] = saved;
+    });
+    setThumbnails(map);
   }, []);
 
   const filtered = useMemo(() => {
@@ -132,16 +142,20 @@ export default function PublicationsPage() {
                         className="group flex flex-col bg-white rounded-[40px] border border-[#bcc9c6]/40 p-1 relative overflow-hidden shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all duration-700 cursor-pointer"
                       >
                          <div className="aspect-video bg-gradient-to-br from-[#00685f] to-[#131b2e] rounded-[38px] relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-700">
-                            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                            <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md rounded-full border text-[8px] font-black uppercase tracking-widest ${
-                              p.status === 'published' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/20 border-amber-500/30 text-amber-400'
+                            {thumbnails[p.id] ? (
+                              <img src={thumbnails[p.id]} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+                            ) : (
+                              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+                            )}
+                            <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-xl rounded-full border text-[8px] font-black uppercase tracking-widest shadow-lg ${
+                              p.status === 'published' ? 'bg-[#131b2e]/90 border-white/10 text-emerald-400' : 'bg-[#131b2e]/90 border-white/10 text-amber-400'
                             }`}>
                                {p.status}
                             </div>
                          </div>
                          <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
                             <div className="space-y-3">
-                               <h3 className="text-base font-black text-[#191c1e] line-clamp-2 min-h-[44px] group-hover:text-[#00685f] transition-colors uppercase leading-tight tracking-tight">{p.title}</h3>
+                               <h3 className="text-base font-black text-[#191c1e] group-hover:text-[#00685f] transition-colors uppercase leading-tight tracking-tight whitespace-normal break-words">{p.title}</h3>
                                <div className="flex items-center justify-between text-[9px] font-black uppercase text-[#bcc9c6] tracking-widest">
                                   <span>Modified</span><span>{p.updatedAt}</span>
                                </div>
@@ -167,7 +181,7 @@ export default function PublicationsPage() {
                       <tbody className="divide-y divide-[#bcc9c6]/10 font-bold text-[13px]">
                          {filtered.map((p) => (
                             <tr key={p.id} className="hover:bg-[#f7f9fb] transition-all group/row whitespace-nowrap">
-                               <td className="px-8 py-5 text-[#191c1e] text-sm font-black truncate max-w-[280px] uppercase tracking-tight">{p.title}</td>
+                               <td className="px-8 py-5 text-[#191c1e] text-sm font-black whitespace-normal break-words uppercase tracking-tight max-w-[400px]">{p.title}</td>
                                <td className="px-8 py-5">
                                   <span className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${p.status === 'published' ? 'bg-[#00685f]/5 text-[#00685f] border-[#00685f]/10' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{p.status}</span>
                                </td>

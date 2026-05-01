@@ -7,7 +7,7 @@ import {
   Type, List, Quote, CheckCircle2, Image as ImageIcon,
   Video, Music, LayoutTemplate, ChevronDown,
   HelpCircle, CheckSquare, CreditCard, GripVertical,
-  MousePointer2, Shuffle, Plus, ArrowRight
+  MousePointer2, Shuffle, Plus, ArrowRight, LayoutGrid
 } from 'lucide-react';
 
 const LAYOUTS = [
@@ -106,6 +106,11 @@ const LAYOUTS = [
     desc: 'Drag and drop matching', color: '#3730A3',
     icon: Shuffle, size: 'normal'
   },
+  {
+    id: 'color-grid', name: 'Color Grid', category: 'Interactive',
+    desc: 'Alternating colored answer grid', color: '#00685f',
+    icon: LayoutGrid, size: 'wide'
+  }
 ];
 
 const CATEGORIES = [

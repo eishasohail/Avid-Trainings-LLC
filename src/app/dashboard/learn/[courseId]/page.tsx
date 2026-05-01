@@ -4,15 +4,15 @@ import React, { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { auth } from "@/lib/firebase/config"
 import { useAuthState } from "react-firebase-hooks/auth"
-import { 
-  ChevronLeft, 
-  ChevronDown, 
+import {
+  ChevronLeft,
+  ChevronDown,
   ChevronRight,
-  CheckCircle2, 
-  Circle, 
-  Clock, 
-  BookOpen, 
-  GraduationCap, 
+  CheckCircle2,
+  Circle,
+  Clock,
+  BookOpen,
+  GraduationCap,
   Bell,
   Search,
   Layout as LayoutIcon,
@@ -29,32 +29,35 @@ export default function CourseViewerPage() {
   const router = useRouter()
   const { courseId } = useParams() as { courseId: string }
   const [user, loadingAuth] = useAuthState(auth)
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  
+
   const [course, setCourse] = useState<any>(null)
   const [completedLectures, setCompletedLectures] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedSections, setExpandedSections] = useState<string[]>([])
   const [showUnenrollModal, setShowUnenrollModal] = useState(false)
+  const [thumbnail, setThumbnail] = useState<string | null>(null)
 
   const handleUnenroll = () => {
     // Remove from enrolled courses
     const existing = localStorage.getItem('avid-enrolled-courses')
     const enrolled: string[] = existing ? JSON.parse(existing) : []
     const updated = enrolled.filter(id => id !== courseId)
-    localStorage.setItem('avid-enrolled-courses', 
+    localStorage.setItem('avid-enrolled-courses',
       JSON.stringify(updated))
-    
+
     // Progress data
     localStorage.removeItem(`avid-progress-${courseId}`)
-    
+
     // Last position
     localStorage.removeItem(`avid-last-position-${courseId}`)
-    
-    // Navigate back to course landing page
-    router.push(`/dashboard/library/${courseId}`)
+
+    // Navigate back to library
+    router.push('/dashboard/library')
   }
+
+  const [realPageCounts, setRealPageCounts] = useState<Record<string, number>>({})
 
   // Load Data
   useEffect(() => {
@@ -69,7 +72,7 @@ export default function CourseViewerPage() {
     const enrolledStr = localStorage.getItem('avid-enrolled-courses')
     const enrolledIds = enrolledStr ? JSON.parse(enrolledStr) : []
     if (!enrolledIds.includes(courseId)) {
-      router.push(`/dashboard/library/${courseId}`)
+      router.push(`/dashboard/library`)
       return
     }
 
@@ -82,6 +85,25 @@ export default function CourseViewerPage() {
     }
     setCourse(foundCourse)
 
+    // Build real page count map from localStorage
+    const counts: Record<string, number> = {}
+    foundCourse.sections.forEach((section: any) => {
+      section.lectures.forEach((lec: any) => {
+        const stored = localStorage.getItem(`avid-pages-${lec.id}`)
+        if (stored) {
+          try {
+            const pages = JSON.parse(stored)
+            counts[lec.id] = Array.isArray(pages) ? pages.length : (lec.pages || 0)
+          } catch {
+            counts[lec.id] = lec.pages || 0
+          }
+        } else {
+          counts[lec.id] = lec.pages || 0
+        }
+      })
+    })
+    setRealPageCounts(counts)
+
     // Progress
     const progressStr = localStorage.getItem(`avid-progress-${courseId}`)
     const progress = progressStr ? JSON.parse(progressStr) : { completedLectures: [] }
@@ -90,6 +112,12 @@ export default function CourseViewerPage() {
     // Default expand all sections
     setExpandedSections(foundCourse.sections.map((s: any) => s.id))
     setLoading(false)
+
+    // Load thumbnail
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`avid-thumbnail-${courseId}`)
+      if (saved) setThumbnail(saved)
+    }
   }, [courseId, user, loadingAuth, router])
 
   if (loadingAuth || loading) {
@@ -104,7 +132,7 @@ export default function CourseViewerPage() {
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex flex-col items-center justify-center gap-4">
         <h1 className="text-2xl font-black text-[#131b2e]">Course not found</h1>
-        <button 
+        <button
           onClick={() => router.push('/dashboard/library')}
           className="flex items-center gap-2 text-[#00685f] font-bold"
         >
@@ -119,13 +147,13 @@ export default function CourseViewerPage() {
   const totalLectures = allLectures.length
   const completedCount = completedLectures.length
   const overallProgress = totalLectures === 0 ? 0 : Math.round((completedCount / totalLectures) * 100)
-  
-  const totalPages = allLectures.reduce((acc: number, l: any) => acc + (l.pages || 0), 0)
+
+  const totalPages = allLectures.reduce((acc: number, l: any) => acc + (realPageCounts[l.id] ?? l.pages ?? 0), 0)
 
   const firstIncompleteLecture = allLectures.find((l: any) => !completedLectures.includes(l.id)) || allLectures[0]
 
   const toggleSection = (id: string) => {
-    setExpandedSections(prev => 
+    setExpandedSections(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     )
   }
@@ -145,7 +173,7 @@ export default function CourseViewerPage() {
         console.error("Error parsing pages", e)
       }
     }
-    router.push(`/dashboard/learn/${courseId}/${lectureId}/page-1`)
+    router.push(`/dashboard/learn/${courseId}/${lectureId}/${lectureId}-p1`)
   }
 
   return (
@@ -153,7 +181,7 @@ export default function CourseViewerPage() {
       {/* Topbar */}
       <header className="h-20 border-b border-slate-200 bg-white fixed top-0 w-full z-[70] px-6 sm:px-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => setIsSidebarOpen(true)}
             className="lg:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-xl"
           >
@@ -164,7 +192,7 @@ export default function CourseViewerPage() {
 
         <div className="hidden lg:block max-w-md w-full mx-10">
           <div className="text-center">
-            <h1 className="text-sm font-black text-[#131b2e] uppercase truncate tracking-tight px-4">
+            <h1 className="text-sm font-black text-[#131b2e] uppercase tracking-tight px-4 whitespace-normal break-words">
               {course.title}
             </h1>
           </div>
@@ -172,8 +200,8 @@ export default function CourseViewerPage() {
 
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex flex-col items-end mr-2">
-             <span className="text-[10px] font-black uppercase tracking-widest text-[#00685f]">Learning Mode</span>
-             <span className="text-[9px] font-bold text-slate-400">Avid Trainings Hub</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#00685f]">Learning Mode</span>
+            <span className="text-[9px] font-bold text-slate-400">Avid Trainings Hub</span>
           </div>
           <div className="w-10 h-10 rounded-2xl bg-[#131b2e] flex items-center justify-center text-white font-black text-sm border-2 border-[#00685f]/20">
             {user?.displayName ? user.displayName[0].toUpperCase() : (user?.email ? user.email[0].toUpperCase() : 'U')}
@@ -203,7 +231,7 @@ export default function CourseViewerPage() {
         `}>
           <div className="p-6 border-b border-slate-100 flex items-center justify-between lg:block">
             <div className="space-y-4 flex-1">
-              <button 
+              <button
                 onClick={() => router.push('/dashboard/library')}
                 className="flex items-center gap-2 text-slate-400 hover:text-[#00685f] transition-colors group"
               >
@@ -212,18 +240,18 @@ export default function CourseViewerPage() {
                 </div>
                 <span className="text-xs font-black uppercase tracking-widest">Exit Course</span>
               </button>
-              <h2 className="text-lg font-black text-[#131b2e] leading-tight line-clamp-2">
+              <h2 className="text-lg font-black text-[#131b2e] leading-tight whitespace-normal break-words">
                 {course.title}
               </h2>
             </div>
-            <button 
+            <button
               onClick={() => setIsSidebarOpen(false)}
               className="lg:hidden p-2 text-slate-400 hover:text-[#131b2e]"
             >
               <X size={24} />
             </button>
           </div>
-          
+
           <div className="px-6 py-4 border-b border-slate-100">
             <div className="space-y-2">
               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter">
@@ -231,20 +259,20 @@ export default function CourseViewerPage() {
                 <span className="text-[#00685f]">{overallProgress}%</span>
               </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${overallProgress}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full bg-[#00685f]" 
+                  className="h-full bg-[#00685f]"
                 />
               </div>
             </div>
             <button
-               onClick={() => setShowUnenrollModal(true)}
-               className="flex items-center gap-2 text-red-400 hover:text-red-600 transition-colors mt-4 group"
+              onClick={() => setShowUnenrollModal(true)}
+              className="flex items-center gap-2 text-red-400 hover:text-red-600 transition-colors mt-4 group"
             >
-               <LogOut size={14} className="text-red-400" />
-               <span className="text-[10px] font-black uppercase tracking-widest">Unenroll From Course</span>
+              <LogOut size={14} className="text-red-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Unenroll From Course</span>
             </button>
           </div>
 
@@ -253,10 +281,10 @@ export default function CourseViewerPage() {
               {course.sections.map((section: any, sIdx: number) => {
                 const isExpanded = expandedSections.includes(section.id)
                 const completedInSection = section.lectures.filter((l: any) => completedLectures.includes(l.id)).length
-                
+
                 return (
                   <div key={section.id} className="space-y-3">
-                    <button 
+                    <button
                       onClick={() => toggleSection(section.id)}
                       className="w-full flex items-center justify-between group"
                     >
@@ -264,19 +292,19 @@ export default function CourseViewerPage() {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00685f]">
                           Section {sIdx + 1}
                         </span>
-                        <span className="text-xs font-black text-[#131b2e] uppercase text-left group-hover:text-[#00685f] transition-colors">
+                        <span className="text-xs font-black text-[#131b2e] uppercase text-left group-hover:text-[#00685f] transition-colors whitespace-normal break-words">
                           {section.title}
                         </span>
                       </div>
-                      <ChevronDown 
-                        size={16} 
-                        className={`text-slate-400 transform transition-transform duration-300 ${isExpanded ? '' : '-rotate-90'}`} 
+                      <ChevronDown
+                        size={16}
+                        className={`text-slate-400 transform transition-transform duration-300 ${isExpanded ? '' : '-rotate-90'}`}
                       />
                     </button>
 
                     <AnimatePresence>
                       {isExpanded && (
-                        <motion.div 
+                        <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
@@ -285,7 +313,7 @@ export default function CourseViewerPage() {
                           {section.lectures.map((lecture: any, lIdx: number) => {
                             const isComplete = completedLectures.includes(lecture.id)
                             const isNext = firstIncompleteLecture?.id === lecture.id
-                            
+
                             return (
                               <motion.div
                                 key={lecture.id}
@@ -301,8 +329,8 @@ export default function CourseViewerPage() {
                                   {isComplete ? (
                                     <CheckCircle2 size={16} className="text-[#00685f] fill-[#00685f]/10" />
                                   ) : isNext ? (
-                                    <motion.div 
-                                      animate={{ scale: [1, 1.2, 1] }} 
+                                    <motion.div
+                                      animate={{ scale: [1, 1.2, 1] }}
                                       transition={{ duration: 2, repeat: Infinity }}
                                       className="w-4 h-4 rounded-full border-2 border-[#00685f] flex items-center justify-center"
                                     >
@@ -313,17 +341,17 @@ export default function CourseViewerPage() {
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <p className={`text-xs font-black leading-tight mb-2 uppercase tracking-tight
+                                  <p className={`text-xs font-black leading-tight mb-2 uppercase tracking-tight whitespace-normal break-words
                                     ${isComplete ? 'text-slate-400' : 'text-[#131b2e]'}
                                   `}>
                                     {lecture.title}
                                   </p>
                                   <div className="flex items-center gap-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                     <span className="flex items-center gap-1">
-                                      <Clock size={10} /> {lecture.pages * 2} min
+                                      <Clock size={10} /> {(realPageCounts[lecture.id] ?? lecture.pages ?? 0) * 2} min
                                     </span>
                                     <span className="flex items-center gap-1">
-                                      <BookOpen size={10} /> {lecture.pages} pages
+                                      <BookOpen size={10} /> {realPageCounts[lecture.id] ?? lecture.pages ?? 0} pages
                                     </span>
                                   </div>
                                 </div>
@@ -344,20 +372,30 @@ export default function CourseViewerPage() {
         <main className="flex-1 lg:ml-80 p-4 sm:p-8 md:p-10 max-w-6xl mx-auto w-full">
           {/* Course Intro Card */}
           <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden mb-10">
-            <div className="h-64 bg-gradient-to-br from-[#131b2e] to-[#00685f] relative flex items-center justify-center overflow-hidden">
-               {/* Decorative Circles */}
-               <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
-               <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-teal-400/10 rounded-full blur-3xl"></div>
-               
-               <motion.div 
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-24 h-24 rounded-[2rem] bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-2xl relative z-10"
-               >
-                 <GraduationCap size={48} strokeWidth={1.5} />
-               </motion.div>
+            <div className="h-[400px] bg-[#131b2e] relative flex items-center justify-center overflow-hidden">
+              {thumbnail ? (
+                <>
+                  <img src={thumbnail} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#131b2e]/60 via-transparent to-transparent" />
+                </>
+              ) : (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#131b2e] to-[#00685f]" />
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-24 h-24 rounded-[2rem] bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-2xl relative z-10"
+                  >
+                    <GraduationCap size={48} strokeWidth={1.5} />
+                  </motion.div>
+                </>
+              )}
+
+              {/* Decorative Circles */}
+              <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-teal-400/10 rounded-full blur-3xl"></div>
             </div>
-            
+
             <div className="p-10 pt-0 -mt-10 relative z-20">
               <div className="max-w-4xl mx-auto bg-white rounded-[2rem] p-10 shadow-xl border border-slate-50">
                 <div className="flex flex-col gap-6">
@@ -366,7 +404,7 @@ export default function CourseViewerPage() {
                       <span className="px-5 py-2 bg-[#00685f]/10 text-[#00685f] text-[10px] font-black uppercase tracking-[0.2em] rounded-full inline-block">
                         {course.isoStandard}
                       </span>
-                      <h1 className="text-4xl font-black text-[#131b2e] leading-[1.1] uppercase tracking-tighter">
+                      <h1 className="text-4xl font-black text-[#131b2e] leading-[1.1] uppercase tracking-tighter whitespace-normal break-words">
                         {course.title}
                       </h1>
                       <div className="flex items-center gap-3">
@@ -378,21 +416,21 @@ export default function CourseViewerPage() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="shrink-0 text-right space-y-2">
-                       <span className="text-4xl font-black text-[#131b2e] tracking-tighter">
-                         {overallProgress}%
-                       </span>
-                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Completion Status</p>
+                      <span className="text-4xl font-black text-[#131b2e] tracking-tighter">
+                        {overallProgress}%
+                      </span>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Completion Status</p>
                     </div>
                   </div>
 
                   <div className="h-4 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                    <motion.div 
+                    <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${overallProgress}%` }}
                       transition={{ duration: 1.5, ease: "easeOut" }}
-                      className="h-full bg-gradient-to-r from-[#00685f] to-teal-400" 
+                      className="h-full bg-gradient-to-r from-[#00685f] to-teal-400"
                     />
                   </div>
 
@@ -412,7 +450,7 @@ export default function CourseViewerPage() {
                   </div>
 
                   <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                    <button 
+                    <button
                       onClick={() => navigateToLecture(firstIncompleteLecture.id)}
                       className="flex-1 bg-[#131b2e] hover:bg-[#00685f] text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all transform hover:scale-[1.01] hover:shadow-2xl active:scale-[0.98]"
                     >
@@ -420,7 +458,7 @@ export default function CourseViewerPage() {
                       {completedCount === totalLectures ? "Review Course" : completedCount > 0 ? "Resume Learning" : "Start Learning"}
                     </button>
                     {completedCount === totalLectures && (
-                      <button 
+                      <button
                         onClick={() => router.push(`/dashboard/learn/${courseId}/certificate`)}
                         className="flex-1 bg-[#00685f] hover:bg-[#004d46] text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all transform hover:scale-[1.01] hover:shadow-2xl active:scale-[0.98]"
                       >
@@ -436,10 +474,10 @@ export default function CourseViewerPage() {
           {/* Section Breakdown */}
           <div className="space-y-8">
             <div className="flex items-center justify-between">
-               <h3 className="text-xl font-black text-[#131b2e] uppercase tracking-tight">Curriculum Overview</h3>
-               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                 {completedCount} of {totalLectures} Lessons Finished
-               </span>
+              <h3 className="text-xl font-black text-[#131b2e] uppercase tracking-tight">Curriculum Overview</h3>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {completedCount} of {totalLectures} Lessons Finished
+              </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -447,9 +485,9 @@ export default function CourseViewerPage() {
                 const totalInSec = section.lectures.length
                 const completedInSec = section.lectures.filter((l: any) => completedLectures.includes(l.id)).length
                 const secPercent = totalInSec === 0 ? 0 : Math.round((completedInSec / totalInSec) * 100)
-                
+
                 return (
-                  <motion.div 
+                  <motion.div
                     key={section.id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -460,23 +498,23 @@ export default function CourseViewerPage() {
                     <div className="flex justify-between items-start mb-6">
                       <div className="space-y-1">
                         <span className="text-[9px] font-black text-[#00685f] uppercase tracking-widest">Section {idx + 1}</span>
-                        <h4 className="font-black text-[#131b2e] leading-tight text-base uppercase">{section.title}</h4>
+                        <h4 className="font-black text-[#131b2e] leading-tight text-base uppercase whitespace-normal break-words">{section.title}</h4>
                       </div>
                       <div className="shrink-0 w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-[#00685f]/10 transition-colors">
                         <span className="text-xs font-black text-[#00685f]">{secPercent}%</span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-tighter text-slate-400">
                         <span>Progress</span>
                         <span>{completedInSec}/{totalInSec} Lessons</span>
                       </div>
                       <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                         <div 
-                          className="h-full bg-[#00685f] transition-all duration-1000" 
+                        <div
+                          className="h-full bg-[#00685f] transition-all duration-1000"
                           style={{ width: `${secPercent}%` }}
-                         />
+                        />
                       </div>
                     </div>
                   </motion.div>

@@ -43,6 +43,19 @@ export default function PublicCourseDetailPage() {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [relatedThumbnails, setRelatedThumbnails] = useState<Record<string, string>>({});
+  const nextCourses = useMemo(() => {
+    if (courseId === 'course-001') return ['course-002', 'course-003'];
+    if (courseId === 'course-002') return ['course-001', 'course-004'];
+    if (courseId === 'course-003') return ['course-004', 'course-002'];
+    if (courseId === 'course-004') return ['course-003', 'course-001'];
+    return [];
+  }, [courseId]);
+
+  const otherSuggested = useMemo(() => getAllCourses().filter(c => nextCourses.includes(c.id)), [nextCourses]);
+  const moreBySyra = useMemo(() => getAllCourses().filter(c => c.id !== courseId && c.status === 'published'), [courseId]);
+
 
   useEffect(() => {
     const allCourses = getAllCourses();
@@ -61,8 +74,21 @@ export default function PublicCourseDetailPage() {
       const existing = localStorage.getItem('avid-enrolled-courses');
       const enrolled = existing ? JSON.parse(existing) : [];
       setIsEnrolled(enrolled.includes(courseId));
+
+      // Load main thumbnail
+      const savedThumb = localStorage.getItem(`avid-thumbnail-${found.id}`);
+      if (savedThumb) setThumbnail(savedThumb);
+
+      // Load related thumbnails
+      const map: Record<string, string> = {};
+      const relatedIds = [...moreBySyra.map(c => c.id), ...otherSuggested.map(c => c.id)];
+      relatedIds.forEach(id => {
+        const saved = localStorage.getItem(`avid-thumbnail-${id}`);
+        if (saved) map[id] = saved;
+      });
+      setRelatedThumbnails(map);
     }
-  }, [courseId, router, user]);
+  }, [courseId, router, user, moreBySyra, otherSuggested]);
 
   const handleEnroll = () => {
     if (typeof window === 'undefined') return;
@@ -181,16 +207,7 @@ export default function PublicCourseDetailPage() {
     }
   ], [courseId]);
 
-  const nextCourses = useMemo(() => {
-    if (courseId === 'course-001') return ['course-002', 'course-003'];
-    if (courseId === 'course-002') return ['course-001', 'course-004'];
-    if (courseId === 'course-003') return ['course-004', 'course-002'];
-    if (courseId === 'course-004') return ['course-003', 'course-001'];
-    return [];
-  }, [courseId]);
 
-  const otherSuggested = DUMMY_COURSES.filter(c => nextCourses.includes(c.id));
-  const moreBySyra = DUMMY_COURSES.filter(c => c.id !== courseId);
 
   if (!course) return null;
 
@@ -237,22 +254,26 @@ export default function PublicCourseDetailPage() {
               <ChevronLeft className="w-4 h-4 mr-1" /> All Courses
             </button>
             <span className="text-[#bcc9c6]">/</span>
-            <span className="text-[#131b2e] truncate max-w-[200px] sm:max-w-none">{course.title}</span>
+            <span className="text-[#131b2e] whitespace-normal break-words">{course.title}</span>
           </div>
         </div>
 
         {/* Hero Section */}
         <section className="relative bg-[#131b2e] text-white py-20 px-8 overflow-hidden rounded-[40px] max-w-7xl mx-auto mb-12 shadow-2xl">
-          <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00685f] rounded-full blur-[120px]"></div>
-            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#00685f] rounded-full blur-[100px]"></div>
-          </div>
+          {thumbnail ? (
+            <img src={thumbnail} alt={course.title} className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" />
+          ) : (
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00685f] rounded-full blur-[120px]"></div>
+              <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#00685f] rounded-full blur-[100px]"></div>
+            </div>
+          )}
           <div className="max-w-4xl mx-auto relative z-10">
             <div className="inline-flex items-center gap-2 bg-[#00685f]/20 text-[#00685f] border border-[#00685f]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
               <Shield className="w-4 h-4" />
               {course.isoStandard} CERTIFIED
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-black mb-10 tracking-tighter leading-none uppercase">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-black mb-10 tracking-tighter leading-none uppercase whitespace-normal break-words">
               {course.title}
             </h1>
             <div className="flex flex-wrap gap-8 items-center text-[11px] font-black uppercase tracking-widest">
@@ -351,7 +372,7 @@ export default function PublicCourseDetailPage() {
                         <span className="text-[11px] font-black text-[#00685f] bg-[#00685f]/5 px-3 py-2 rounded-xl border border-[#00685f]/10">
                           {String(idx + 1).padStart(2, '0')}
                         </span>
-                        <h4 className="font-black text-xl text-[#131b2e] uppercase tracking-tight group-hover:text-[#00685f] transition-colors">{section.title}</h4>
+                        <h4 className="font-black text-xl text-[#131b2e] uppercase tracking-tight group-hover:text-[#00685f] transition-colors whitespace-normal break-words">{section.title}</h4>
                       </div>
                       <motion.div
                         animate={{ rotate: expandedSections.includes(section.id) ? 180 : 0 }}
@@ -374,7 +395,7 @@ export default function PublicCourseDetailPage() {
                               <div key={lecture.id} className="px-10 py-5 flex items-center justify-between hover:bg-white hover:shadow-inner transition-colors group cursor-default">
                                 <div className="flex items-center gap-4">
                                   <BookOpen className="text-[#bcc9c6] group-hover:text-[#00685f] w-5 h-5 transition-colors" />
-                                  <span className="text-sm font-black text-[#565e74] group-hover:text-[#131b2e] transition-colors uppercase tracking-wide">
+                                  <span className="text-sm font-black text-[#565e74] group-hover:text-[#131b2e] transition-colors uppercase tracking-wide whitespace-normal break-words">
                                     {lecture.title}
                                   </span>
                                 </div>
@@ -510,19 +531,24 @@ export default function PublicCourseDetailPage() {
                <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar scroll-smooth">
                   {moreBySyra.map(c => (
                      <div 
-                       key={c.id} 
-                       onClick={() => router.push(`/courses/${c.id}`)}
-                       className="min-w-[320px] bg-white rounded-[40px] border border-[#bcc9c6]/30 p-8 shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all cursor-pointer group shrink-0"
-                     >
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00685f]/5 text-[#00685f] rounded-full text-[9px] font-black uppercase tracking-widest border border-[#00685f]/10 mb-6">
-                           {c.isoStandard}
-                        </div>
-                        <h4 className="text-xl font-black text-[#131b2e] uppercase leading-tight group-hover:text-[#00685f] transition-colors mb-4 line-clamp-2">{c.title}</h4>
-                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-[#6d7a77]">
-                           <span>{c.category}</span>
-                           <span>{getLearnerCountForCourse(c.id)} Learners</span>
-                        </div>
-                     </div>
+                        key={c.id} 
+                        onClick={() => router.push(`/courses/${c.id}`)}
+                        className="min-w-[320px] bg-white rounded-[40px] border border-[#bcc9c6]/30 p-8 shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all cursor-pointer group shrink-0 relative overflow-hidden"
+                      >
+                         {relatedThumbnails[c.id] && (
+                           <img src={relatedThumbnails[c.id]} alt={c.title} className="absolute inset-0 w-full h-full object-cover opacity-5 group-hover:opacity-10 transition-opacity" />
+                         )}
+                         <div className="relative z-10">
+                           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00685f]/5 text-[#00685f] rounded-full text-[9px] font-black uppercase tracking-widest border border-[#00685f]/10 mb-6">
+                              {c.isoStandard}
+                           </div>
+                           <h4 className="text-xl font-black text-[#131b2e] uppercase leading-tight group-hover:text-[#00685f] transition-colors mb-4 whitespace-normal break-words">{c.title}</h4>
+                           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-[#6d7a77]">
+                              <span>{c.category}</span>
+                              <span>{getLearnerCountForCourse(c.id)} Learners</span>
+                           </div>
+                         </div>
+                      </div>
                   ))}
                </div>
             </section>
@@ -536,16 +562,21 @@ export default function PublicCourseDetailPage() {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {otherSuggested.map(c => (
                      <div 
-                       key={c.id} 
-                       onClick={() => router.push(`/courses/${c.id}`)}
-                       className="bg-white rounded-[40px] border border-[#bcc9c6]/30 p-10 shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all cursor-pointer group"
-                     >
-                        <div className="w-14 h-14 bg-[#ebfaf8] rounded-2xl flex items-center justify-center text-[#00685f] mb-8 shadow-inner group-hover:scale-110 transition-transform">
-                           <Award className="w-8 h-8" />
-                        </div>
-                        <h4 className="text-2xl font-black text-[#131b2e] uppercase leading-tight group-hover:text-[#00685f] transition-colors mb-4">{c.title}</h4>
-                        <p className="text-[11px] font-black uppercase tracking-widest text-[#6d7a77]">{c.isoStandard} • {c.category}</p>
-                     </div>
+                        key={c.id} 
+                        onClick={() => router.push(`/courses/${c.id}`)}
+                        className="bg-white rounded-[40px] border border-[#bcc9c6]/30 p-10 shadow-sm hover:shadow-2xl hover:border-[#00685f]/30 transition-all cursor-pointer group relative overflow-hidden"
+                      >
+                         {relatedThumbnails[c.id] && (
+                           <img src={relatedThumbnails[c.id]} alt={c.title} className="absolute inset-0 w-full h-full object-cover opacity-5 group-hover:opacity-10 transition-opacity" />
+                         )}
+                         <div className="relative z-10">
+                           <div className="w-14 h-14 bg-[#ebfaf8] rounded-2xl flex items-center justify-center text-[#00685f] mb-8 shadow-inner group-hover:scale-110 transition-transform">
+                              <Award className="w-8 h-8" />
+                           </div>
+                           <h4 className="text-2xl font-black text-[#131b2e] uppercase leading-tight group-hover:text-[#00685f] transition-colors mb-4 whitespace-normal break-words">{c.title}</h4>
+                           <p className="text-[11px] font-black uppercase tracking-widest text-[#6d7a77]">{c.isoStandard} • {c.category}</p>
+                         </div>
+                      </div>
                   ))}
                </div>
             </section>
@@ -557,7 +588,11 @@ export default function PublicCourseDetailPage() {
               
               <div className="bg-white rounded-[40px] border border-[#bcc9c6]/40 overflow-hidden shadow-2xl shadow-[#131b2e]/10 animate-fade-in stagger-3">
                 <div className="aspect-[4/3] relative bg-[#131b2e] overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#131b2e] to-[#00685f] opacity-60 group-hover:scale-110 transition-transform duration-1000" />
+                  {thumbnail ? (
+                    <img src={thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#131b2e] to-[#00685f] opacity-60 group-hover:scale-110 transition-transform duration-1000" />
+                  )}
                   <div className="absolute inset-0 flex items-center justify-center">
                      <Play className="w-16 h-16 text-white/40 drop-shadow-2xl" />
                   </div>

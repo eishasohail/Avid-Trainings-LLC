@@ -147,7 +147,7 @@ export default function SectionRow({
                           className="w-full bg-transparent text-xl font-black text-[#191c1e] outline-none border-b-2 border-[#00685f] transition-all"
                         />
                       ) : (
-                        <h3 className="text-xl font-black text-[#191c1e] transition-colors group-hover/folder:text-[#00685f] tracking-tighter">
+                        <h3 className="text-xl font-black text-[#191c1e] transition-colors group-hover/folder:text-[#00685f] tracking-tighter whitespace-normal break-words">
                           {title}
                         </h3>
                       )}

@@ -165,6 +165,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
 
   const [courses, setCourses] = useState<any[]>([])
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({})
   const journeyRef = useRef(null);
   const { scrollYProgress: journeyProgress } = useScroll({
     target: journeyRef,
@@ -182,10 +183,14 @@ export default function LandingPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const all = getAllCourses()
-    const published = all.filter(
-      c => c.status === 'published'
-    )
-    setCourses(published)
+    setCourses(all)
+
+    const map: Record<string, string> = {}
+    all.forEach(c => {
+      const saved = localStorage.getItem(`avid-thumbnail-${c.id}`)
+      if (saved) map[c.id] = saved
+    })
+    setThumbnails(map)
   }, [])
 
   const sections = ["home", "features", "curriculum", "methodology", "enterprise"];
@@ -579,13 +584,22 @@ export default function LandingPage() {
                   className="shrink-0 min-w-[320px] bg-white rounded-[2rem] overflow-hidden border border-slate-100 flex flex-col group transition-all"
                 >
                   <div className="h-56 bg-gradient-to-br from-[#131b2e] to-[#00685f] relative flex items-center justify-center">
-                    <div className="absolute top-4 left-4 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
-                      <span className="text-[9px] font-black text-white uppercase tracking-widest">{course.isoStandard}</span>
+                    {thumbnails[course.id] ? (
+                      <img src={thumbnails[course.id]} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <GraduationCap className="w-20 h-20 text-white/20 group-hover:scale-110 transition-transform duration-500" />
+                    )}
+                    <div className="absolute inset-x-4 top-4 flex justify-between items-start z-10">
+                      <div className="bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-white/50 shadow-lg">
+                        <span className="text-[9px] font-black text-[#131b2e] uppercase tracking-widest">{course.isoStandard}</span>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-500 shadow-md">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
                     </div>
-                    <GraduationCap className="w-20 h-20 text-white/20 group-hover:scale-110 transition-transform duration-500" />
                   </div>
                   <div className="p-6 flex flex-col flex-1">
-                    <h3 className="text-lg font-black text-[#131b2e] leading-tight mb-4 flex-1">{course.title}</h3>
+                    <h3 className="text-lg font-black text-[#131b2e] leading-tight mb-4 flex-1 whitespace-normal break-words">{course.title}</h3>
                     <div className="border-t border-[#f0f4f4] pt-4 mt-auto">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
