@@ -126,6 +126,10 @@ interface PageContent {
   popupImagePosition?: string;
   sequenceItems?: { id: string; text: string }[];
   hotspots?: { id: string; x: number; y: number; label: string; isCorrect: boolean }[];
+  intro?: string;
+  outro?: string;
+  cells?: string[];
+  cols?: number;
 }
 
 interface PageData {
